@@ -38,3 +38,11 @@ Kenyan solar SMEs — the operations managers coordinating maintenance across a 
 
 ### Why now
 Solar deployment in the region is growing faster than repair capacity and remote-service infrastructure can keep up. The bottleneck isn't installing more solar — it's keeping what's already installed running well.
+
+------
+
+## Contributors
+- [Andrew Okutu](https://github.com/aokutu)
+- [Dixon Osure](https://github.com/Dixon-O)
+- [Joel Samoita](https://github.com/joe-samoita)
+- [Peter Iregi](https://github.com/PeterIregi)
