@@ -1,0 +1,32 @@
+# Build context = backend/. Keep the image to app code + runtime deps only.
+__pycache__/
+*.py[cod]
+*.so
+
+# Local databases must never be baked into the image.
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets / local env — provided at runtime via compose instead.
+.env
+.env.*
+!.env.example
+
+# Dev-only tooling and caches.
+tests/
+requirements-dev.txt
+run_tests.sh
+pytest.ini
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Docs / meta.
+README.md
+Dockerfile
+.dockerignore

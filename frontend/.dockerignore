@@ -1,0 +1,24 @@
+# Build context = frontend/. Keep it lean and reproducible.
+
+# Dependencies and build output are regenerated inside the image.
+node_modules/
+dist/
+dev-dist/
+
+# TypeScript incremental caches.
+*.tsbuildinfo
+
+# Local env / secrets. .env.production is generated in-image from a build ARG.
+.env
+.env.*
+!.env.example
+
+# VCS + logs + OS cruft.
+.git/
+.gitignore
+*.log
+.DS_Store
+
+# Docker meta (nginx.conf is intentionally NOT ignored — stage 2 copies it).
+Dockerfile
+.dockerignore

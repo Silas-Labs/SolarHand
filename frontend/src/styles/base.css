@@ -1,0 +1,144 @@
+/* ============================================================================
+   SolarHand — base / reset
+   Font faces are imported in main.tsx via @fontsource (self-hosted for offline).
+   ============================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--sh-font-sans);
+  font-size: var(--sh-fs-base);
+  line-height: var(--sh-lh-normal);
+  color: var(--sh-text);
+  background-color: var(--sh-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Prevent the pull-to-refresh / overscroll glow from fighting the app. */
+  overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sh-font-display);
+  font-weight: 600;
+  line-height: var(--sh-lh-tight);
+  color: var(--sh-ink);
+  letter-spacing: -0.01em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+a {
+  color: var(--sh-volt-strong);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+/* Numeric/data readouts use the mono face and tabular figures. */
+.sh-mono,
+[data-mono] {
+  font-family: var(--sh-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Eyebrow / label microtype. */
+.sh-eyebrow {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  letter-spacing: var(--sh-tracking-wider);
+  text-transform: uppercase;
+  color: var(--sh-text-faint);
+}
+
+/* -- Accessibility floor ---------------------------------------------- */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--sh-ring);
+  border-radius: var(--sh-r-sm);
+}
+
+.sh-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -- Shared layout helpers -------------------------------------------- */
+.sh-app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-container {
+  width: 100%;
+  max-width: var(--sh-content-max);
+  margin-inline: auto;
+  padding-inline: var(--sh-sp-4);
+}
