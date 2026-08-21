@@ -15,6 +15,7 @@
     { "source": "/audit/(.*)", "destination": "/backend/app/main.py" },
     { "source": "/health", "destination": "/backend/app/main.py" },
     { "source": "/docs", "destination": "/backend/app/main.py" },
-    { "source": "/openapi.json", "destination": "/backend/app/main.py" }
+    { "source": "/openapi.json", "destination": "/backend/app/main.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
