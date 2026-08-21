@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { ClipboardList, RefreshCw, Sun, User, WifiOff } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { SyncPill } from "./SyncPill";
 import { ToastHost } from "./ui/Toast";
+import { Loading } from "./ui/Spinner";
 import { useSync } from "@/store/sync";
 import { cx } from "@/lib/util";
 
@@ -41,7 +43,9 @@ export function AppShell() {
 
       <main className="sh-main">
         <div className="sh-container">
-          <Outlet />
+          <Suspense fallback={<Loading />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 
