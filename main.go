@@ -18,7 +18,7 @@ import (
 
 func main() {
 
-	// ❌ REMOVED: Ticketnumber is no longer generated out here!
+	
 
 	stations, err := SolarStations.LoadStations("data/stations.json")
 	if err != nil {
@@ -38,14 +38,18 @@ func main() {
 			i = 0                        
 		}
 
-		station := stations[i]
-
-		// ✅ FIX: Move this INSIDE the loop. 
-		// It now creates a brand-new unique ticket number for this specific station.
-		Ticketnumber := Tickets.GenerateTicketID()
+	   			station := stations[i]
 
 		// Generate metrics
 		metrics := StationMetrics.Generate()
+
+		// ✅ FIX: Change "Normal" to "NORMAL" to match your system metrics case exactly
+		var Ticketnumber int64
+		if metrics.Status != "NORMAL" {
+			Ticketnumber = Tickets.GenerateTicketID()
+		} else {
+			Ticketnumber = 0 // Normal stations get 0
+		}
 
 		// Create telemetry object
 		telemetry := Telemetry.Telemetry{
@@ -58,7 +62,7 @@ func main() {
 			Temperature: metrics.Temperature,
 			Power:       metrics.Power,
 			Status:      metrics.Status,
-			Ticket:		 Ticketnumber, // Receives the freshly generated ID
+			Ticket:		 Ticketnumber, 
 		}
 
 		// Display telemetry in terminal
