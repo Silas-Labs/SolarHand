@@ -57,10 +57,28 @@ def create_app() -> FastAPI:
 
 
 def _register_routers(app: FastAPI) -> None:
-    """Attach feature routers. Extended as modules land."""
-    # Registered incrementally in later commits:
-    #   auth, companies, assets, jobs, readings, sync, analytics, compliance
-    return None
+    """Attach feature routers."""
+    from app.routers import (
+        assets,
+        audit_log,
+        auth,
+        companies,
+        faults,
+        jobs,
+        readings,
+        sync,
+        users,
+    )
+
+    app.include_router(auth.router)
+    app.include_router(users.router)
+    app.include_router(companies.router)
+    app.include_router(assets.router)
+    app.include_router(jobs.router)
+    app.include_router(readings.router)
+    app.include_router(faults.router)
+    app.include_router(sync.router)
+    app.include_router(audit_log.router)
 
 
 app = create_app()
