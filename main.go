@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"Simulator/SolarStations"
 	"Simulator/StationMetrics"
+	"time"
 )
 
 func main() {
@@ -18,13 +19,19 @@ func main() {
 	fmt.Println("Number of stations:", len(stations))
 
 	for _, station := range stations {
+
+		metrics := StationMetrics.Generate()
+		timestamp := time.Now()
+
 		fmt.Println(
+			timestamp,
 			station.StationName,
 			station.Latitude,
 			station.Longitude,
+			metrics.Voltage,
+			metrics.Current,
+			metrics.Temperature,
+			metrics.Power,
 		)
 	}
-
-
-	StationMetrics.StationMetrics()
 }
