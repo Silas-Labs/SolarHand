@@ -237,6 +237,13 @@ func handleWorkOrders(w http.ResponseWriter, r *http.Request) {
 		if req.SiteContactPhone == "" {
 			req.SiteContactPhone = "Not provided"
 		}
+		if len(req.Checklist) == 0 {
+			req.Checklist = []string{
+				"Inspect station equipment",
+				"Diagnose reported problem",
+				"Repair and verify normal operation",
+			}
+		}
 
 		mu.Lock()
 		workOrders = append([]WorkOrder{req}, workOrders...)
