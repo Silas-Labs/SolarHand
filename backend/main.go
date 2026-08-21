@@ -231,6 +231,12 @@ func handleWorkOrders(w http.ResponseWriter, r *http.Request) {
 		if req.Timestamp.IsZero() {
 			req.Timestamp = time.Now().UTC()
 		}
+		if req.SiteContactName == "" {
+			req.SiteContactName = "Unassigned"
+		}
+		if req.SiteContactPhone == "" {
+			req.SiteContactPhone = "Not provided"
+		}
 
 		mu.Lock()
 		workOrders = append([]WorkOrder{req}, workOrders...)
