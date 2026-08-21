@@ -6,6 +6,8 @@ Run locally:
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,11 +18,20 @@ from app.database import init_db
 
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        # Create tables on boot. In production you'd use migrations; for the
+        # hackathon this keeps a fresh clone one command away from running.
+        init_db()
+        yield
+
     app = FastAPI(
         title=settings.app_name,
         version=__version__,
         summary="Field-service, compliance & no-telemetry performance checks "
         "for Kenya's solar installers.",
+        lifespan=lifespan,
     )
 
     app.add_middleware(
@@ -30,12 +41,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    @app.on_event("startup")
-    def _startup() -> None:
-        # Create tables on boot. In production you'd use migrations; for the
-        # hackathon this keeps a fresh clone one command away from running.
-        init_db()
 
     @app.get("/", tags=["meta"], summary="Service banner")
     def root() -> dict:
