@@ -9,8 +9,14 @@ import type {
   AnalyzeRequest,
   AssetDetail,
   AssetRead,
+  AssetUpsert,
+  AuditLogRead,
+  AuditVerifyResult,
+  CompanyRead,
+  CompanyUpdate,
   FaultReportRead,
   JobRead,
+  JobUpsert,
   ReadingRead,
   ReadingUpsert,
   RegisterRequest,
@@ -19,7 +25,9 @@ import type {
   SyncPushRequest,
   SyncPushResponse,
   Token,
+  UserCreate,
   UserRead,
+  UserUpdate,
 } from "./types";
 
 const BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
@@ -136,6 +144,15 @@ export const api = {
   getAsset(id: string): Promise<AssetDetail> {
     return request<AssetDetail>(`/assets/${encodeURIComponent(id)}`);
   },
+  createAsset(payload: AssetUpsert): Promise<AssetRead> {
+    return request<AssetRead>("/assets", { method: "POST", body: payload });
+  },
+  updateAsset(id: string, payload: Partial<AssetUpsert>): Promise<AssetRead> {
+    return request<AssetRead>(`/assets/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: payload,
+    });
+  },
   listJobs(params: { mine?: boolean; status?: string; assetId?: string } = {}): Promise<
     JobRead[]
   > {
@@ -148,6 +165,15 @@ export const api = {
   },
   getJob(id: string): Promise<JobRead> {
     return request<JobRead>(`/jobs/${encodeURIComponent(id)}`);
+  },
+  createJob(payload: JobUpsert): Promise<JobRead> {
+    return request<JobRead>("/jobs", { method: "POST", body: payload });
+  },
+  updateJob(id: string, payload: Partial<JobUpsert>): Promise<JobRead> {
+    return request<JobRead>(`/jobs/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: payload,
+    });
   },
   listReadings(assetId?: string): Promise<ReadingRead[]> {
     const qs = assetId ? `?asset_id=${encodeURIComponent(assetId)}` : "";
@@ -164,6 +190,45 @@ export const api = {
     if (params.resolved !== undefined) q.set("resolved", String(params.resolved));
     const qs = q.toString();
     return request<FaultReportRead[]>(`/faults${qs ? `?${qs}` : ""}`);
+  },
+  resolveFault(id: string): Promise<FaultReportRead> {
+    return request<FaultReportRead>(
+      `/faults/${encodeURIComponent(id)}/resolve`,
+      { method: "PATCH" },
+    );
+  },
+
+  // -- Admin: team, company, audit -------------------------------------
+  listUsers(): Promise<UserRead[]> {
+    return request<UserRead[]>("/users");
+  },
+  createUser(payload: UserCreate): Promise<UserRead> {
+    return request<UserRead>("/users", { method: "POST", body: payload });
+  },
+  updateUser(id: string, payload: UserUpdate): Promise<UserRead> {
+    return request<UserRead>(`/users/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: payload,
+    });
+  },
+  getCompany(): Promise<CompanyRead> {
+    return request<CompanyRead>("/companies/me");
+  },
+  updateCompany(payload: CompanyUpdate): Promise<CompanyRead> {
+    return request<CompanyRead>("/companies/me", { method: "PATCH", body: payload });
+  },
+  listAudit(params: { entityType?: string; entityId?: string; limit?: number } = {}): Promise<
+    AuditLogRead[]
+  > {
+    const q = new URLSearchParams();
+    if (params.entityType) q.set("entity_type", params.entityType);
+    if (params.entityId) q.set("entity_id", params.entityId);
+    if (params.limit) q.set("limit", String(params.limit));
+    const qs = q.toString();
+    return request<AuditLogRead[]>(`/audit${qs ? `?${qs}` : ""}`);
+  },
+  verifyAudit(): Promise<AuditVerifyResult> {
+    return request<AuditVerifyResult>("/audit/verify");
   },
 
   // -- Analytics (Digital Twin Lite) -----------------------------------
