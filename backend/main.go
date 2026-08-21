@@ -61,6 +61,14 @@ var (
 			Urgency:     "urgent",
 			Status:      "Dispatched",
 			Timestamp:   time.Now().Add(-2 * time.Hour),
+
+			SiteContactName:  "Grace Achieng",
+			SiteContactPhone: "+254 712 345 678",
+			Checklist: []string{
+				"Inspect inverter array B connections",
+				"Measure string voltage output",
+				"Reset and verify normal operation",
+			},
 		},
 	}
 )
