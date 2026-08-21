@@ -71,3 +71,37 @@ export async function fetchWorkOrders() {
   }
   return null;
 }
+
+/**
+ * Post work order / telemetry data to backend API
+ */
+export async function postWorkOrder(payload) {
+  try {
+    const res = await fetch(`${API_BASE}/api/work-orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('API Error submitting work order:', e);
+    return false;
+  }
+}
+
+/**
+ * Post telemetry object directly to http://localhost:8000/Stationmetrics
+ */
+export async function postTelemetry(telemetry) {
+  try {
+    const res = await fetch(`${API_BASE}/Stationmetrics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(telemetry),
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('API Error posting telemetry:', e);
+    return false;
+  }
+}
