@@ -14,6 +14,13 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  build: {
+    // Emit hashed JS/CSS under /static/ rather than the Vite default /assets/.
+    // "/assets" is a client-side SPA route (asset list/detail), so a real
+    // "assets/" directory on disk would collide with the reverse proxy's
+    // `try_files $uri /index.html` fallback. /static/ has no such collision.
+    assetsDir: "static",
+  },
   plugins: [
     react(),
     VitePWA({
