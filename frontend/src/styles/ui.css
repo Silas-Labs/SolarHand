@@ -1665,3 +1665,69 @@
 @media (max-width: 380px) {
   .sh-adm-map__legend { display: none; }
 }
+
+/* -- Admin: forms ---------------------------------------------------------- */
+.sh-adm-form {
+  margin-bottom: var(--sh-sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-4);
+}
+.sh-adm-form__grid { display: grid; grid-template-columns: 1fr; gap: var(--sh-sp-4); }
+@media (min-width: 640px) {
+  .sh-adm-form__grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* -- Admin: dispatch board ------------------------------------------------- */
+.sh-adm-board { display: grid; grid-template-columns: 1fr; gap: var(--sh-sp-4); }
+@media (min-width: 720px) {
+  .sh-adm-board { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1040px) {
+  .sh-adm-board { grid-template-columns: repeat(4, 1fr); align-items: start; }
+}
+.sh-adm-col {
+  background: var(--sh-surface-2);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-lg);
+  padding: var(--sh-sp-3);
+}
+.sh-adm-col__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sh-sp-1) var(--sh-sp-2) var(--sh-sp-3);
+  font-weight: 600;
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+}
+.sh-adm-col__body { display: flex; flex-direction: column; gap: var(--sh-sp-3); }
+.sh-adm-col__empty {
+  padding: var(--sh-sp-3) var(--sh-sp-2);
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-faint);
+}
+.sh-adm-jobcard {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-md);
+  padding: var(--sh-sp-3);
+  box-shadow: var(--sh-shadow-sm);
+  transition: opacity var(--sh-dur-1) var(--sh-ease);
+}
+.sh-adm-jobcard[data-busy] { opacity: 0.55; pointer-events: none; }
+.sh-adm-jobcard__meta { margin-top: 4px; font-size: var(--sh-fs-sm); color: var(--sh-text-muted); }
+.sh-adm-jobcard__date { margin-top: 2px; font-size: var(--sh-fs-xs); color: var(--sh-text-faint); }
+.sh-adm-jobcard__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-2);
+  margin-top: var(--sh-sp-3);
+}
+.sh-adm-minifield { display: flex; flex-direction: column; gap: 2px; }
+.sh-adm-minifield > span {
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-faint);
+  font-weight: 500;
+}
+.sh-select--sm { padding: var(--sh-sp-2) var(--sh-sp-3); font-size: var(--sh-fs-sm); }
