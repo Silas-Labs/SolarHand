@@ -8,9 +8,10 @@ let the test-suite and a fresh clone run with zero configuration.
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -38,7 +39,14 @@ class Settings(BaseSettings):
 
     # --- CORS ---
     # Accepts a comma-separated string in the env; normalised to a list.
-    cors_origins: list[str] = [
+    #
+    # ``NoDecode`` is essential: pydantic-settings otherwise tries to JSON-decode
+    # any complex-typed field (here ``list[str]``) directly in the env source,
+    # *before* field validators run. A bare value like
+    # ``SOLARHAND_CORS_ORIGINS=http://localhost:8080`` is not valid JSON, so that
+    # decode raises ``SettingsError`` at import time and the app never starts.
+    # NoDecode hands the raw string to ``_split_cors`` below instead.
+    cors_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
