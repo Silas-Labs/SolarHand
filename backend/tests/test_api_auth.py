@@ -27,10 +27,13 @@ def test_register_creates_company_and_admin(client):
 
 
 def test_register_duplicate_email_conflicts(client):
+    # NB: use a real TLD, not a reserved one (.test/.example/.invalid are
+    # rejected by email-validator), so the request passes validation and
+    # actually reaches the duplicate-email (409) path this test guards.
     payload = {
         "company": {"name": "Dup Co"},
         "admin": {
-            "email": "dup@co.test",
+            "email": "dup@dupco.co",
             "full_name": "Dee Up",
             "password": "password123",
         },
@@ -45,7 +48,9 @@ def test_register_rejects_short_password(client):
         "/auth/register",
         json={
             "company": {"name": "Weak Co"},
-            "admin": {"email": "weak@co.test", "full_name": "W", "password": "short"},
+            # Real TLD so the password (below min length) is the *only*
+            # invalid field, keeping this test focused on password rules.
+            "admin": {"email": "weak@weakco.co", "full_name": "W", "password": "short"},
         },
     )
     assert resp.status_code == 422
