@@ -14,12 +14,12 @@ import (
 	"Simulator/Tickets"
 )
 
+
 func main() {
 
 	Tickets.GenerateTicket()
 
 	stations, err := SolarStations.LoadStations("data/stations.json")
-
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -29,8 +29,13 @@ func main() {
 
 	for i := 0; ; i++ {
 
+		// ✅ FIX: Check if we finished the batch BEFORE reading the station index
 		if i >= len(stations) {
-			i = 0
+			fmt.Println("\n⏳ [BATCH COMPLETE] Sent telemetry for all stations.")
+			fmt.Println("⏳ Resting for 50 seconds before the next cycle...\n")
+			
+			time.Sleep(5 * time.Second) // Pauses here before starting over
+			i = 0                        // Reset index back to the first station
 		}
 
 		station := stations[i]
@@ -65,7 +70,6 @@ func main() {
 
 		// Send telemetry to API
 		err := sendTelemetry(telemetry)
-
 		if err != nil {
 			fmt.Println("API Error:", err)
 		} else {
@@ -73,11 +77,11 @@ func main() {
 		}
 
 		fmt.Println("==============================================")
-
-		// Wait before processing next station
-		time.Sleep(1 * time.Second)
-	}
+	} 
+	// ✅ REMOVED: The unreachable sleep statement that was down here is gone.
 }
+
+
 
 func sendTelemetry(telemetry Telemetry.Telemetry) error {
 
