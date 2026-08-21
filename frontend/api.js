@@ -32,3 +32,42 @@ export async function fetchStationMetrics() {
 
   return null;
 }
+
+/**
+ * Fetch fleet summary metrics from API
+ */
+export async function fetchFleetMetrics() {
+  try {
+    const res = await fetch(`${API_BASE}/api/metrics/summary`);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    // API unready
+  }
+  return null;
+}
+
+/**
+ * Fetch active alerts from API
+ */
+export async function fetchAlerts() {
+  try {
+    const res = await fetch(`${API_BASE}/api/alerts`);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    // API unready
+  }
+  return null;
+}
+
+/**
+ * Fetch work orders from API
+ */
+export async function fetchWorkOrders() {
+  try {
+    const res = await fetch(`${API_BASE}/api/work-orders`);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    // API unready
+  }
+  return null;
+}
