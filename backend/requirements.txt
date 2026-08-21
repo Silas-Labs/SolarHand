@@ -1,0 +1,22 @@
+# SolarHand backend — runtime dependencies
+# Python 3.11+
+
+# --- Web framework & server ---
+fastapi>=0.111,<1.0
+uvicorn[standard]>=0.30,<1.0
+python-multipart>=0.0.9        # OAuth2 form parsing (login)
+
+# --- Data / ORM ---
+SQLAlchemy>=2.0.30,<2.1
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+email-validator>=2.1           # pydantic EmailStr
+
+# --- Auth / security ---
+# JWT (HS256) is implemented in app/security.py using only the Python stdlib
+# (hmac + hashlib), so there is no python-jose/PyJWT dependency to carry or
+# keep patched. bcrypt handles password hashing directly (no passlib shim).
+bcrypt>=4.1,<5.0
+
+# --- HTTP client (Open-Meteo in analytics phase; also used by TestClient) ---
+httpx>=0.27
