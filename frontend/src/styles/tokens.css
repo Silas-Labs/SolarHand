@@ -1,0 +1,116 @@
+/* ============================================================================
+   SolarHand — design tokens
+   ----------------------------------------------------------------------------
+   Visual thesis: an instrument for reading solar systems in the field, under
+   the equatorial sun. The identity is drawn from a monocrystalline PV module —
+   deep silicon-cell indigo, silver busbar hairlines — on a high-key "daylight"
+   ground chosen for legibility outdoors. Voltaic blue carries interaction;
+   amber is the single accent, spent sparingly; green/red are semantic (and a
+   quiet nod to the Kenyan flag: healthy = go, critical = stop).
+   ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* -- Brand: deep silicon-cell indigo --------------------------------- */
+  --sh-ink: #10152e;
+  --sh-ink-800: #161d3f;
+  --sh-ink-700: #1b2450;
+  --sh-ink-600: #263166;
+
+  /* -- Interactive: voltaic blue --------------------------------------- */
+  --sh-volt: #3b5bdb;
+  --sh-volt-strong: #2f49b8;
+  --sh-volt-soft: #e7ecfd;
+
+  /* -- Accent: amp amber (spend it in one place) ----------------------- */
+  --sh-amp: #f2a413;
+  --sh-amp-strong: #cf8709;
+  --sh-amp-soft: #fdf0d6;
+
+  /* -- Semantic states ------------------------------------------------- */
+  --sh-go: #12894e;
+  --sh-go-soft: #e2f3ea;
+  --sh-warn: #e8912b;
+  --sh-warn-soft: #fcefd9;
+  --sh-alert: #d6323b;
+  --sh-alert-soft: #fbe4e5;
+  --sh-info: #3b5bdb;
+  --sh-info-soft: #e7ecfd;
+
+  /* -- Neutrals: daylight ---------------------------------------------- */
+  --sh-bg: #f6f7fb;
+  --sh-surface: #ffffff;
+  --sh-surface-2: #eef1f8;
+  --sh-line: #d8dcea;
+  --sh-line-strong: #c3c9de;
+
+  --sh-text: #171a2b;
+  --sh-text-muted: #5a6178;
+  --sh-text-faint: #8b91a6;
+  --sh-on-ink: #eef1fb;
+  --sh-on-ink-muted: #a7afd0;
+
+  /* -- Typography ------------------------------------------------------- */
+  --sh-font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --sh-font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --sh-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
+    monospace;
+
+  --sh-fs-xs: 0.75rem;
+  --sh-fs-sm: 0.8125rem;
+  --sh-fs-base: 0.9375rem; /* 15px — dense but legible on small screens */
+  --sh-fs-md: 1.0625rem;
+  --sh-fs-lg: 1.25rem;
+  --sh-fs-xl: 1.5rem;
+  --sh-fs-2xl: 2rem;
+  --sh-fs-3xl: 2.5rem;
+
+  --sh-lh-tight: 1.15;
+  --sh-lh-snug: 1.35;
+  --sh-lh-normal: 1.55;
+
+  --sh-tracking-wide: 0.08em;
+  --sh-tracking-wider: 0.14em;
+
+  /* -- Spacing (4px base) ---------------------------------------------- */
+  --sh-sp-1: 0.25rem;
+  --sh-sp-2: 0.5rem;
+  --sh-sp-3: 0.75rem;
+  --sh-sp-4: 1rem;
+  --sh-sp-5: 1.25rem;
+  --sh-sp-6: 1.5rem;
+  --sh-sp-8: 2rem;
+  --sh-sp-10: 2.5rem;
+  --sh-sp-12: 3rem;
+
+  /* -- Radii (tactile, for gloved taps) -------------------------------- */
+  --sh-r-sm: 8px;
+  --sh-r-md: 12px;
+  --sh-r-lg: 16px;
+  --sh-r-xl: 22px;
+  --sh-r-pill: 999px;
+
+  /* -- Elevation (low-contrast, daylight) ------------------------------ */
+  --sh-shadow-sm: 0 1px 2px rgba(16, 21, 46, 0.06),
+    0 1px 3px rgba(16, 21, 46, 0.04);
+  --sh-shadow-md: 0 2px 8px rgba(16, 21, 46, 0.07),
+    0 6px 20px rgba(16, 21, 46, 0.05);
+  --sh-shadow-lg: 0 8px 32px rgba(16, 21, 46, 0.14);
+  --sh-ring: 0 0 0 3px var(--sh-volt-soft), 0 0 0 1.5px var(--sh-volt);
+
+  /* -- Motion ----------------------------------------------------------- */
+  --sh-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --sh-dur-1: 120ms;
+  --sh-dur-2: 220ms;
+  --sh-dur-3: 420ms;
+
+  /* -- Layout ----------------------------------------------------------- */
+  --sh-appbar-h: 56px;
+  --sh-tabbar-h: 64px;
+  --sh-content-max: 560px; /* phone-first; centered on larger screens */
+  --sh-tap-min: 44px; /* minimum touch target */
+  --sh-safe-top: env(safe-area-inset-top, 0px);
+  --sh-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
