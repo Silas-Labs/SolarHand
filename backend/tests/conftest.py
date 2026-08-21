@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import models  # noqa: F401  (register models on Base.metadata)
-from app.database import Base, get_db
+from app.database import Base, get_db, install_sqlite_savepoint_support
 from app.main import create_app
 
 
@@ -30,6 +30,9 @@ def db_session_factory():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    # Match production: reliable SAVEPOINT support on pysqlite (the sync
+    # endpoint's per-item isolation depends on it).
+    install_sqlite_savepoint_support(engine)
     Base.metadata.create_all(engine)
     TestingSessionLocal = sessionmaker(
         bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
