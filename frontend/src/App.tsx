@@ -1,7 +1,8 @@
 /* Application router.
-   One PWA, role-aware. Unauthenticated users get the login/onboarding screen;
-   everyone else works inside the AppShell (bottom-tab layout). Admin-only routes
-   are layered on in a later phase — the shell and guard are shared. */
+   One PWA, role-aware. Unauthenticated users get the login/onboarding screen.
+   Administrators work in the AdminShell (back-office console); technicians work
+   in the offline-first AppShell (bottom-tab field app). The role decides which
+   shell and route tree mount. */
 
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "@/store/auth";
@@ -16,6 +17,13 @@ import { AssetDetailPage } from "@/features/assets/AssetDetailPage";
 import { ReadingCapture } from "@/features/readings/ReadingCapture";
 import { SyncPage } from "@/features/sync/SyncPage";
 import { ProfilePage } from "@/features/profile/ProfilePage";
+import { AdminShell } from "@/components/AdminShell";
+import { AdminDashboard } from "@/features/admin/AdminDashboard";
+import { FleetMap } from "@/features/admin/FleetMap";
+import { Dispatch } from "@/features/admin/Dispatch";
+import { Team } from "@/features/admin/Team";
+import { Compliance } from "@/features/admin/Compliance";
+import { AuditTrail } from "@/features/admin/AuditTrail";
 
 function Splash() {
   return (
@@ -38,6 +46,23 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  if (user.role === "admin") {
+    return (
+      <Routes>
+        <Route element={<AdminShell />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/map" element={<FleetMap />} />
+          <Route path="/admin/jobs" element={<Dispatch />} />
+          <Route path="/admin/team" element={<Team />} />
+          <Route path="/admin/compliance" element={<Compliance />} />
+          <Route path="/admin/audit" element={<AuditTrail />} />
+          <Route index element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
       </Routes>
     );
   }
