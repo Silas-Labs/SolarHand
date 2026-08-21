@@ -296,7 +296,8 @@ func runSimulator(stations []SolarStations.Station) {
 		// Also post to HTTP endpoint to verify API ingestion
 		_ = sendTelemetry(telemetry)
 
-		time.Sleep(200 * time.Millisecond)
+		// Doc spec: live station data is sent every second
+		time.Sleep(1 * time.Second)
 	}
 }
 
