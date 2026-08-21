@@ -185,10 +185,10 @@ func handleAlerts(w http.ResponseWriter, r *http.Request) {
 	for _, t := range stationStore {
 		if t.Status != "NORMAL" {
 			severity := "High"
-			sla := "2h 15m"
+			sla := "2h 15m left to fix"
 			if t.Status == "FAULT" {
 				severity = "Critical"
-				sla = "45m"
+				sla = "45 minutes left to fix"
 			}
 			alerts = append(alerts, AlertItem{
 				ID:        fmt.Sprintf("AL-%d", 4800+idx),
