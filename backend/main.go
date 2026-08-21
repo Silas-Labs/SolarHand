@@ -22,6 +22,10 @@ type WorkOrder struct {
 	Urgency     string    `json:"urgency"`
 	Status      string    `json:"status"`
 	Timestamp   time.Time `json:"timestamp"`
+
+	SiteContactName  string   `json:"site_contact_name"`
+	SiteContactPhone string   `json:"site_contact_phone"`
+	Checklist        []string `json:"checklist"`
 }
 
 type SummaryMetrics struct {
