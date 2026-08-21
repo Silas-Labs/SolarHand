@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Sun,
@@ -17,7 +17,11 @@ import {
   PhoneCall,
   Send,
   CircleCheck,
+  Shield,
+  Settings,
+  Wifi,
 } from "lucide-react";
+import { fetchStationMetrics, postWorkOrder } from "./api";
 
 const fontImport = `
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -82,52 +86,11 @@ const fontImport = `
 
 const owner = { name: "Neema", system: "Neema's Cold Storage — Kisumu", capacity: "5.2 kW system" };
 
-const alerts = [
-  {
-    id: "A-1",
-    title: "Battery capacity declining",
-    severity: "Medium",
-    status: "action",
-    detail:
-      "Your battery is holding 78% of rated capacity, down from 92% last quarter. We recommend scheduling a replacement check within 6 weeks so cold storage stays protected overnight.",
-    time: "2 hours ago",
-    icon: Battery,
-  },
-  {
-    id: "A-2",
-    title: "Panel cleaning recommended",
-    severity: "Low",
-    status: "action",
-    detail:
-      "Dust buildup is reducing your output by an estimated 9%. A routine clean usually restores full performance within a day.",
-    time: "Yesterday",
-    icon: Sun,
-  },
-  {
-    id: "A-3",
-    title: "Inverter fan maintenance due",
-    severity: "Medium",
-    status: "scheduled",
-    detail:
-      "Scheduled maintenance is due in 12 days as part of your service plan. A technician will confirm a visit window closer to the date.",
-    time: "3 days ago",
-    icon: Wrench,
-  },
-  {
-    id: "A-4",
-    title: "Charge controller check completed",
-    severity: "Info",
-    status: "resolved",
-    detail: "Routine inspection completed with no issues found. Next check is scheduled automatically.",
-    time: "5 days ago",
-    icon: CheckCircle2,
-  },
-];
-
 const severityStyle = {
   Medium: { color: "var(--gold)", bg: "rgba(227,167,61,0.14)" },
   Low: { color: "var(--blue-sync)", bg: "rgba(108,143,163,0.14)" },
   Info: { color: "var(--off-white-50)", bg: "rgba(242,239,230,0.06)" },
+  Critical: { color: "var(--red)", bg: "var(--red-dim)" },
 };
 
 const issueTypes = ["Performance drop", "Strange noise", "No power", "Battery issue", "Routine maintenance", "Other"];
@@ -135,11 +98,6 @@ const urgencyOptions = [
   { key: "wait", label: "Can wait", window: "within 3–5 days" },
   { key: "soon", label: "Soon", window: "within 24 hours" },
   { key: "urgent", label: "Urgent", window: "within 4 hours" },
-];
-
-const priorRequests = [
-  { id: "REQ-1038", title: "Inverter making noise", status: "Completed", time: "3 weeks ago" },
-  { id: "REQ-1021", title: "Output lower than usual", status: "Completed", time: "2 months ago" },
 ];
 
 function StatusBar() {
@@ -208,8 +166,8 @@ function SnapshotStat({ icon: Icon, label, value, sub }) {
 }
 
 function AlertPreviewCard({ alert, onOpen }) {
-  const Icon = alert.icon;
-  const s = severityStyle[alert.severity];
+  const Icon = alert.icon || Battery;
+  const s = severityStyle[alert.severity] || severityStyle.Medium;
   return (
     <button
       onClick={onOpen}
@@ -228,33 +186,41 @@ function AlertPreviewCard({ alert, onOpen }) {
   );
 }
 
-function HomeScreen({ onOpenAlerts, onOpenAlert, onRequestAssistance }) {
-  const actionAlerts = alerts.filter((a) => a.status === "action");
+function HomeScreen({ siteData, alertsList, onOpenAlerts, onOpenAlert, onRequestAssistance }) {
+  const actionAlerts = alertsList.filter((a) => a.status === "action");
+  const voltage = siteData?.voltage ? siteData.voltage.toFixed(1) : "18.4";
+  const power = siteData?.power ? (siteData.power / 1000).toFixed(2) : "3.85";
+  const healthScore = siteData?.status === "FAULT" ? 45 : siteData?.status === "WARNING" ? 68 : 94;
+
   return (
     <div className="flex-1 overflow-y-auto ca-scrollbar px-4 pb-24 pt-2">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-xs" style={{ color: "var(--off-white-50)" }}>Hi {owner.name},</p>
-          <h1 className="ca-display text-base font-bold" style={{ color: "var(--off-white)" }}>{owner.system}</h1>
+          <h1 className="ca-display text-base font-bold" style={{ color: "var(--off-white)" }}>{siteData?.station_name || owner.system}</h1>
         </div>
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "rgba(89,161,126,0.14)", border: "1px solid rgba(89,161,126,0.3)" }}>
           <span className="ca-live-dot relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full rounded-full" style={{ background: "var(--green-bright)" }} />
+            <span className="absolute inline-flex h-full w-full rounded-full" style={{ background: siteData?.status === "FAULT" ? "var(--red)" : "var(--green-bright)" }} />
           </span>
-          <span className="ca-mono text-[10px] font-medium" style={{ color: "var(--green-bright)" }}>Producing</span>
+          <span className="ca-mono text-[10px] font-medium" style={{ color: siteData?.status === "FAULT" ? "var(--red)" : "var(--green-bright)" }}>
+            {siteData ? `API Live (${siteData.status})` : "Producing"}
+          </span>
         </div>
       </div>
 
       <div className="ca-rise flex flex-col items-center gap-2 rounded-xl p-5 mb-4" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
         <span className="ca-mono text-[10px] uppercase tracking-wide" style={{ color: "var(--off-white-35)" }}>System Health</span>
-        <HealthRing score={92} />
-        <p className="text-[11px]" style={{ color: "var(--off-white-50)" }}>Last checked 10 minutes ago</p>
+        <HealthRing score={healthScore} />
+        <p className="text-[11px]" style={{ color: "var(--off-white-50)" }}>
+          Updated from http://localhost:8000
+        </p>
       </div>
 
       <div className="flex gap-2 mb-4">
-        <SnapshotStat icon={Zap} label="TODAY" value="18.4 kWh" sub="Generated so far" />
-        <SnapshotStat icon={Battery} label="BATTERY" value="78%" sub="Charged" />
-        <SnapshotStat icon={TrendingUp} label="UPTIME" value="99.1%" sub="This month" />
+        <SnapshotStat icon={Zap} label="POWER" value={`${power} kW`} sub="Live generated" />
+        <SnapshotStat icon={Battery} label="VOLTAGE" value={`${voltage} V`} sub="Current Bus" />
+        <SnapshotStat icon={TrendingUp} label="UPTIME" value="99.4%" sub="This month" />
       </div>
 
       <button
@@ -284,16 +250,18 @@ function HomeScreen({ onOpenAlerts, onOpenAlert, onRequestAssistance }) {
   );
 }
 
-function AlertsScreen({ onBack, onOpenAlert }) {
+function AlertsScreen({ alertsList, onBack, onOpenAlert }) {
   const [filter, setFilter] = useState("all");
-  const filtered = alerts.filter((a) => (filter === "all" ? true : filter === "action" ? a.status === "action" : a.status === "resolved" || a.status === "scheduled"));
+  const filtered = alertsList.filter((a) => (filter === "all" ? true : filter === "action" ? a.status === "action" : a.status === "resolved" || a.status === "scheduled"));
 
   return (
     <>
       <div className="flex items-center gap-3 px-4 py-3 shrink-0" style={{ borderBottom: "1px solid var(--line)" }}>
-        <button onClick={onBack} className="ca-tap ca-focusable w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--charcoal-800)" }}>
-          <ArrowLeft size={15} style={{ color: "var(--off-white)" }} />
-        </button>
+        {onBack && (
+          <button onClick={onBack} className="ca-tap ca-focusable w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--charcoal-800)" }}>
+            <ArrowLeft size={15} style={{ color: "var(--off-white)" }} />
+          </button>
+        )}
         <h1 className="text-sm font-semibold" style={{ color: "var(--off-white)" }}>Alerts &amp; Maintenance</h1>
       </div>
 
@@ -319,10 +287,10 @@ function AlertsScreen({ onBack, onOpenAlert }) {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto ca-scrollbar px-4 pt-3 pb-6 flex flex-col gap-2.5">
+      <div className="flex-1 overflow-y-auto ca-scrollbar px-4 pt-3 pb-24 flex flex-col gap-2.5">
         {filtered.map((a) => {
-          const Icon = a.icon;
-          const s = severityStyle[a.severity];
+          const Icon = a.icon || Battery;
+          const s = severityStyle[a.severity] || severityStyle.Medium;
           return (
             <button
               key={a.id}
@@ -352,8 +320,8 @@ function AlertsScreen({ onBack, onOpenAlert }) {
 }
 
 function AlertDetailScreen({ alert, onBack, onRequestAssistance }) {
-  const Icon = alert.icon;
-  const s = severityStyle[alert.severity];
+  const Icon = alert.icon || Battery;
+  const s = severityStyle[alert.severity] || severityStyle.Medium;
   return (
     <>
       <div className="flex items-center gap-3 px-4 py-3 shrink-0" style={{ borderBottom: "1px solid var(--line)" }}>
@@ -406,15 +374,33 @@ function RequestScreen({ onBack, onSubmitted, prefill }) {
   const [issue, setIssue] = useState(prefill || null);
   const [description, setDescription] = useState("");
   const [urgency, setUrgency] = useState("soon");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canSubmit = !!issue && description.trim().length > 0;
+  const canSubmit = !isSubmitting && !!issue && description.trim().length > 0;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setIsSubmitting(true);
+    const payload = {
+      title: issue,
+      description,
+      urgency,
+      station: "Kisumu Solar Station 001",
+      timestamp: new Date().toISOString(),
+    };
+    await postWorkOrder(payload);
+    setIsSubmitting(false);
+    onSubmitted({ issue, urgency });
+  };
 
   return (
     <>
       <div className="flex items-center gap-3 px-4 py-3 shrink-0" style={{ borderBottom: "1px solid var(--line)" }}>
-        <button onClick={onBack} className="ca-tap ca-focusable w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--charcoal-800)" }}>
-          <ArrowLeft size={15} style={{ color: "var(--off-white)" }} />
-        </button>
+        {onBack && (
+          <button onClick={onBack} className="ca-tap ca-focusable w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--charcoal-800)" }}>
+            <ArrowLeft size={15} style={{ color: "var(--off-white)" }} />
+          </button>
+        )}
         <h1 className="text-sm font-semibold" style={{ color: "var(--off-white)" }}>Request Assistance</h1>
       </div>
 
@@ -471,28 +457,12 @@ function RequestScreen({ onBack, onSubmitted, prefill }) {
             ))}
           </div>
         </div>
-
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--off-white-50)" }}>Your past requests</h2>
-          <div className="flex flex-col gap-2">
-            {priorRequests.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 rounded-lg p-3" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
-                <CircleCheck size={15} style={{ color: "var(--green-bright)" }} className="shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium truncate" style={{ color: "var(--off-white)" }}>{r.title}</p>
-                  <p className="ca-mono text-[10px]" style={{ color: "var(--off-white-35)" }}>{r.id} · {r.time}</p>
-                </div>
-                <span className="ca-mono text-[10px] font-medium" style={{ color: "var(--green-bright)" }}>{r.status}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-4 pt-3" style={{ background: "linear-gradient(to top, var(--charcoal-950) 60%, transparent)" }}>
         <button
           disabled={!canSubmit}
-          onClick={() => onSubmitted({ issue, urgency })}
+          onClick={handleSubmit}
           className="ca-tap ca-focusable w-full py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
           style={{
             background: canSubmit ? "var(--gold)" : "var(--charcoal-700)",
@@ -500,10 +470,39 @@ function RequestScreen({ onBack, onSubmitted, prefill }) {
           }}
         >
           <Send size={14} />
-          Send request
+          {isSubmitting ? "Submitting to API…" : "Send request"}
         </button>
       </div>
     </>
+  );
+}
+
+function ProfileScreen({ siteData }) {
+  return (
+    <div className="flex-1 overflow-y-auto ca-scrollbar px-4 pt-4 pb-24 flex flex-col gap-4">
+      <div className="flex items-center gap-3 pb-3 border-b" style={{ borderColor: "var(--line)" }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center sh-display text-base font-bold" style={{ background: "var(--green-deep)", color: "var(--off-white)" }}>
+          NM
+        </div>
+        <div>
+          <h2 className="text-base font-bold" style={{ color: "var(--off-white)" }}>{owner.name}</h2>
+          <p className="text-xs" style={{ color: "var(--off-white-50)" }}>System Owner · Kisumu Region</p>
+        </div>
+      </div>
+
+      <div className="rounded-lg p-3.5 flex flex-col gap-2.5" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
+        <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--gold)" }}>System Specifications</h3>
+        <div className="flex justify-between text-xs"><span style={{ color: "var(--off-white-50)" }}>System Name:</span><span style={{ color: "var(--off-white)" }}>{owner.system}</span></div>
+        <div className="flex justify-between text-xs"><span style={{ color: "var(--off-white-50)" }}>Capacity:</span><span style={{ color: "var(--off-white)" }}>{owner.capacity}</span></div>
+        <div className="flex justify-between text-xs"><span style={{ color: "var(--off-white-50)" }}>API Status:</span><span style={{ color: "var(--green-bright)" }}>{siteData ? "Connected (http://localhost:8000)" : "Polling..."}</span></div>
+      </div>
+
+      <div className="rounded-lg p-3.5 flex flex-col gap-2" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
+        <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--off-white-50)" }}>Support SLA Plan</h3>
+        <p className="text-xs font-medium" style={{ color: "var(--off-white)" }}>Premium Solar Maintenance Tier</p>
+        <p className="text-[11px]" style={{ color: "var(--off-white-50)" }}>Includes 24/7 telemetry monitoring & 4-hour urgent dispatch response.</p>
+      </div>
+    </div>
   );
 }
 
@@ -517,24 +516,7 @@ function ConfirmationScreen({ requestData, onDone }) {
       <div>
         <h1 className="ca-display text-lg font-bold" style={{ color: "var(--off-white)" }}>Request received</h1>
         <p className="text-xs mt-2 leading-relaxed max-w-[280px]" style={{ color: "var(--off-white-70)" }}>
-          We've logged <span style={{ color: "var(--off-white)" }}>{requestData.issue}</span> for {owner.system}. Our
-          operations team typically responds {urgencyInfo?.window}.
-        </p>
-      </div>
-      <div className="w-full max-w-[280px] rounded-lg p-3.5 flex flex-col gap-2 text-left" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
-        <div className="flex items-center justify-between">
-          <span className="ca-mono text-[11px]" style={{ color: "var(--off-white-35)" }}>Tracking ID</span>
-          <span className="ca-mono text-[11px] font-medium" style={{ color: "var(--off-white)" }}>REQ-1042</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ca-mono text-[11px]" style={{ color: "var(--off-white-35)" }}>Status</span>
-          <span className="ca-mono text-[11px] font-medium" style={{ color: "var(--gold)" }}>Logged with operations</span>
-        </div>
-      </div>
-      <div className="w-full max-w-[280px] rounded-lg p-3 flex items-center gap-2.5 text-left" style={{ background: "var(--charcoal-800)", border: "1px solid var(--line)" }}>
-        <PhoneCall size={14} style={{ color: "var(--blue-sync)" }} className="shrink-0" />
-        <p className="text-[11px]" style={{ color: "var(--off-white-50)" }}>
-          Need to talk to someone sooner? Call the SolarHand support line anytime.
+          We've logged <span style={{ color: "var(--off-white)" }}>{requestData.issue}</span> for {owner.system}. Sent to API at http://localhost:8000.
         </p>
       </div>
       <button
@@ -548,7 +530,7 @@ function ConfirmationScreen({ requestData, onDone }) {
   );
 }
 
-function BottomNav({ active }) {
+function BottomNav({ active, onChange }) {
   const items = [
     { key: "home", label: "Home", icon: Home },
     { key: "alerts", label: "Alerts", icon: Bell },
@@ -556,12 +538,16 @@ function BottomNav({ active }) {
     { key: "profile", label: "Profile", icon: User },
   ];
   return (
-    <div className="flex items-stretch shrink-0" style={{ background: "var(--charcoal-900)", borderTop: "1px solid var(--line)" }}>
+    <div className="flex items-stretch shrink-0 z-20" style={{ background: "var(--charcoal-900)", borderTop: "1px solid var(--line)" }}>
       {items.map((it) => {
         const Icon = it.icon;
         const isActive = it.key === active;
         return (
-          <button key={it.key} className="ca-tap ca-focusable flex-1 flex flex-col items-center gap-1 py-2.5">
+          <button
+            key={it.key}
+            onClick={() => onChange(it.key)}
+            className="ca-tap ca-focusable flex-1 flex flex-col items-center gap-1 py-2.5 cursor-pointer"
+          >
             <Icon size={17} style={{ color: isActive ? "var(--gold)" : "var(--off-white-35)" }} strokeWidth={isActive ? 2.3 : 2} />
             <span className="text-[10px] font-medium" style={{ color: isActive ? "var(--gold)" : "var(--off-white-35)" }}>{it.label}</span>
           </button>
@@ -576,13 +562,60 @@ export default function SolarHandClientApp() {
   const [activeAlert, setActiveAlert] = useState(null);
   const [prefillIssue, setPrefillIssue] = useState(null);
   const [requestData, setRequestData] = useState(null);
+  const [siteTelemetry, setSiteTelemetry] = useState(null);
 
-  const navActive = screen === "home" ? "home" : screen === "alerts" || screen === "alertDetail" ? "alerts" : screen === "request" || screen === "confirmation" ? "support" : "home";
-  const showNav = screen === "home" || screen === "alerts";
+  useEffect(() => {
+    let isMounted = true;
+    async function pollTelemetry() {
+      const data = await fetchStationMetrics();
+      if (!isMounted) return;
+      if (data && Array.isArray(data) && data.length > 0) {
+        const kisumuStation = data.find((s) => s.station_name && s.station_name.includes("Kisumu")) || data[0];
+        setSiteTelemetry(kisumuStation);
+      }
+    }
+    pollTelemetry();
+    const interval = setInterval(pollTelemetry, 2000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const alertsList = siteTelemetry && siteTelemetry.status !== "NORMAL"
+    ? [
+        {
+          id: "A-API",
+          title: `Telemetry alert: ${siteTelemetry.status}`,
+          severity: siteTelemetry.status === "FAULT" ? "Critical" : "Medium",
+          status: "action",
+          detail: `Station ${siteTelemetry.station_name} reported Voltage: ${siteTelemetry.voltage?.toFixed(1)}V, Temp: ${siteTelemetry.temperature?.toFixed(1)}°C, Output: ${siteTelemetry.power?.toFixed(0)}W.`,
+          time: "Just now",
+          icon: Battery,
+        },
+      ]
+    : [
+        {
+          id: "A-1",
+          title: "Battery capacity check",
+          severity: "Medium",
+          status: "action",
+          detail: "Battery operating nominally at rated capacity. Monitored via API.",
+          time: "API Connected",
+          icon: Battery,
+        },
+      ];
 
   const goRequest = (prefill) => {
     setPrefillIssue(prefill || null);
-    setScreen("request");
+    setScreen("support");
+  };
+
+  const handleNavChange = (tabKey) => {
+    if (tabKey === "home") setScreen("home");
+    else if (tabKey === "alerts") setScreen("alerts");
+    else if (tabKey === "support") setScreen("support");
+    else if (tabKey === "profile") setScreen("profile");
   };
 
   return (
@@ -603,25 +636,28 @@ export default function SolarHandClientApp() {
         <div className="flex-1 relative flex flex-col min-h-0">
           {screen === "home" && (
             <HomeScreen
+              siteData={siteTelemetry}
+              alertsList={alertsList}
               onOpenAlerts={() => setScreen("alerts")}
               onOpenAlert={(a) => { setActiveAlert(a); setScreen("alertDetail"); }}
               onRequestAssistance={() => goRequest(null)}
             />
           )}
           {screen === "alerts" && (
-            <AlertsScreen onBack={() => setScreen("home")} onOpenAlert={(a) => { setActiveAlert(a); setScreen("alertDetail"); }} />
+            <AlertsScreen alertsList={alertsList} onBack={() => setScreen("home")} onOpenAlert={(a) => { setActiveAlert(a); setScreen("alertDetail"); }} />
           )}
           {screen === "alertDetail" && activeAlert && (
             <AlertDetailScreen alert={activeAlert} onBack={() => setScreen("alerts")} onRequestAssistance={(title) => goRequest(null)} />
           )}
-          {screen === "request" && (
+          {screen === "support" && (
             <RequestScreen onBack={() => setScreen("home")} onSubmitted={(data) => { setRequestData(data); setScreen("confirmation"); }} prefill={prefillIssue} />
           )}
+          {screen === "profile" && <ProfileScreen siteData={siteTelemetry} />}
           {screen === "confirmation" && requestData && (
             <ConfirmationScreen requestData={requestData} onDone={() => { setScreen("home"); setRequestData(null); }} />
           )}
         </div>
-        {showNav && <BottomNav active={navActive} />}
+        <BottomNav active={screen === "support" ? "support" : screen === "profile" ? "profile" : screen === "alerts" || screen === "alertDetail" ? "alerts" : "home"} onChange={handleNavChange} />
       </div>
     </div>
   );
