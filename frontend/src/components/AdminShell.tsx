@@ -4,7 +4,7 @@
    connection indicator lives in the bar rather than the offline banner the
    field app uses. */
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   FileCheck2,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { ToastHost } from "./ui/Toast";
+import { Loading } from "./ui/Spinner";
 import { useAuth } from "@/store/auth";
 import { useSync } from "@/store/sync";
 import { cx } from "@/lib/util";
@@ -130,7 +131,9 @@ export function AdminShell() {
 
         <main className="sh-adm__main">
           <div className="sh-adm__content">
-            <Outlet />
+            <Suspense fallback={<Loading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>

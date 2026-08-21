@@ -1,0 +1,49 @@
+# SolarHand — full-stack local/demo deployment.
+#
+#   docker compose up --build          build images and start the stack
+#   docker compose exec api python -m app.seed    load demo data (idempotent)
+#
+# The PWA (nginx) is the only public tier; it reverse-proxies /api to the API
+# over the internal network, so the browser talks to a single origin.
+name: solarhand
+
+services:
+  api:
+    build:
+      context: ./backend
+    image: solarhand-api
+    environment:
+      SOLARHAND_ENVIRONMENT: production
+      # SQLite on a named volume (matches the path baked into the image).
+      SOLARHAND_DATABASE_URL: sqlite:////data/solarhand.db
+      # Falls back to a demo secret; override via .env for anything real.
+      SOLARHAND_JWT_SECRET_KEY: ${SOLARHAND_JWT_SECRET_KEY:-demo-insecure-secret-change-me}
+      # Unused for the bundled same-origin PWA; set if you expose the API to a
+      # separate front-end origin.
+      SOLARHAND_CORS_ORIGINS: ${SOLARHAND_CORS_ORIGINS:-http://localhost:${WEB_PORT:-8080}}
+    volumes:
+      - api-data:/data
+    # Published for direct inspection (Swagger UI at http://localhost:8000/docs).
+    # Not required by the PWA, which reaches the API via the web tier's proxy.
+    ports:
+      - "${API_PORT:-8000}:8000"
+    # Liveness check (GET /health) is defined in backend/Dockerfile.
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # Bake the same-origin API base into the bundle.
+        VITE_API_BASE: /api
+    image: solarhand-web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    # Liveness check (GET /) is defined in frontend/Dockerfile.
+    restart: unless-stopped
+
+volumes:
+  api-data:

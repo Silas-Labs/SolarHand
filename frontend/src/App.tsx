@@ -4,26 +4,49 @@
    in the offline-first AppShell (bottom-tab field app). The role decides which
    shell and route tree mount. */
 
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "@/store/auth";
 import { AppShell } from "@/components/AppShell";
+import { AdminShell } from "@/components/AdminShell";
 import { BrandMark } from "@/components/BrandMark";
 import { Spinner } from "@/components/ui/Spinner";
 import { LoginPage } from "@/features/auth/LoginPage";
-import { JobsPage } from "@/features/jobs/JobsPage";
-import { JobDetailPage } from "@/features/jobs/JobDetailPage";
-import { AssetsPage } from "@/features/assets/AssetsPage";
-import { AssetDetailPage } from "@/features/assets/AssetDetailPage";
-import { ReadingCapture } from "@/features/readings/ReadingCapture";
-import { SyncPage } from "@/features/sync/SyncPage";
-import { ProfilePage } from "@/features/profile/ProfilePage";
-import { AdminShell } from "@/components/AdminShell";
-import { AdminDashboard } from "@/features/admin/AdminDashboard";
-import { FleetMap } from "@/features/admin/FleetMap";
-import { Dispatch } from "@/features/admin/Dispatch";
-import { Team } from "@/features/admin/Team";
-import { Compliance } from "@/features/admin/Compliance";
-import { AuditTrail } from "@/features/admin/AuditTrail";
+
+/* Route components are code-split so each role only downloads what it uses.
+   The service worker precaches every emitted JS chunk, so offline navigation
+   still resolves these dynamic imports from cache.
+   Named exports are adapted to the default export React.lazy expects. */
+
+// Technician field app.
+const JobsPage = lazy(() =>
+  import("@/features/jobs/JobsPage").then((m) => ({ default: m.JobsPage })));
+const JobDetailPage = lazy(() =>
+  import("@/features/jobs/JobDetailPage").then((m) => ({ default: m.JobDetailPage })));
+const AssetsPage = lazy(() =>
+  import("@/features/assets/AssetsPage").then((m) => ({ default: m.AssetsPage })));
+const AssetDetailPage = lazy(() =>
+  import("@/features/assets/AssetDetailPage").then((m) => ({ default: m.AssetDetailPage })));
+const ReadingCapture = lazy(() =>
+  import("@/features/readings/ReadingCapture").then((m) => ({ default: m.ReadingCapture })));
+const SyncPage = lazy(() =>
+  import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })));
+const ProfilePage = lazy(() =>
+  import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage })));
+
+// Admin console — heavier (Leaflet fleet map, data tables); loaded only for admins.
+const AdminDashboard = lazy(() =>
+  import("@/features/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
+const FleetMap = lazy(() =>
+  import("@/features/admin/FleetMap").then((m) => ({ default: m.FleetMap })));
+const Dispatch = lazy(() =>
+  import("@/features/admin/Dispatch").then((m) => ({ default: m.Dispatch })));
+const Team = lazy(() =>
+  import("@/features/admin/Team").then((m) => ({ default: m.Team })));
+const Compliance = lazy(() =>
+  import("@/features/admin/Compliance").then((m) => ({ default: m.Compliance })));
+const AuditTrail = lazy(() =>
+  import("@/features/admin/AuditTrail").then((m) => ({ default: m.AuditTrail })));
 
 function Splash() {
   return (
