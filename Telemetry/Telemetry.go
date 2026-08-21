@@ -12,4 +12,5 @@ type Telemetry struct {
 	Temperature float64   `json:"temperature"`
 	Power       float64   `json:"power"`
 	Status      string    `json:"status"`
+	Ticket      int64	   `json:"ticket"`
 }

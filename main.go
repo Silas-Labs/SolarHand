@@ -15,9 +15,10 @@ import (
 )
 
 
+
 func main() {
 
-	Tickets.GenerateTicket()
+	// ❌ REMOVED: Ticketnumber is no longer generated out here!
 
 	stations, err := SolarStations.LoadStations("data/stations.json")
 	if err != nil {
@@ -29,16 +30,19 @@ func main() {
 
 	for i := 0; ; i++ {
 
-		// ✅ FIX: Check if we finished the batch BEFORE reading the station index
 		if i >= len(stations) {
 			fmt.Println("\n⏳ [BATCH COMPLETE] Sent telemetry for all stations.")
-			fmt.Println("⏳ Resting for 50 seconds before the next cycle...\n")
+			fmt.Println("⏳ Resting for 5 seconds before the next cycle...\n")
 			
-			time.Sleep(5 * time.Second) // Pauses here before starting over
-			i = 0                        // Reset index back to the first station
+			time.Sleep(5 * time.Second) 
+			i = 0                        
 		}
 
 		station := stations[i]
+
+		// ✅ FIX: Move this INSIDE the loop. 
+		// It now creates a brand-new unique ticket number for this specific station.
+		Ticketnumber := Tickets.GenerateTicketID()
 
 		// Generate metrics
 		metrics := StationMetrics.Generate()
@@ -54,6 +58,7 @@ func main() {
 			Temperature: metrics.Temperature,
 			Power:       metrics.Power,
 			Status:      metrics.Status,
+			Ticket:		 Ticketnumber, // Receives the freshly generated ID
 		}
 
 		// Display telemetry in terminal
@@ -67,6 +72,7 @@ func main() {
 		fmt.Println("Temperature:", telemetry.Temperature, "°C")
 		fmt.Println("Power:", telemetry.Power, "W")
 		fmt.Println("Status:", telemetry.Status)
+		fmt.Println("Ticket # :", telemetry.Ticket)
 
 		// Send telemetry to API
 		err := sendTelemetry(telemetry)
@@ -78,8 +84,8 @@ func main() {
 
 		fmt.Println("==============================================")
 	} 
-	// ✅ REMOVED: The unreachable sleep statement that was down here is gone.
 }
+
 
 
 
