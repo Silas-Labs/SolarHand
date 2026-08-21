@@ -264,3 +264,69 @@ export interface SyncPullResponse {
   readings: ReadingRead[];
   faults: FaultReportRead[];
 }
+
+/* -- Admin write payloads & compliance ---------------------------------- */
+
+export interface AssetUpsert {
+  id?: string;
+  customer_name: string;
+  customer_phone?: string | null;
+  location_name: string;
+  county?: string | null;
+  latitude: number;
+  longitude: number;
+  tilt_deg?: number;
+  azimuth_deg?: number;
+  system_kwp: number;
+  inverter_kva?: number | null;
+  battery_kwh?: number | null;
+  module_type?: string | null;
+  install_date?: string | null;
+  status?: AssetStatus;
+  notes?: string | null;
+}
+
+export interface UserCreate {
+  email: string;
+  full_name: string;
+  password: string;
+  role?: Role;
+  epra_technician_license?: string | null;
+}
+
+export interface UserUpdate {
+  full_name?: string;
+  role?: Role;
+  epra_technician_license?: string | null;
+  is_active?: boolean;
+  password?: string;
+}
+
+export interface CompanyUpdate {
+  name?: string;
+  epra_contractor_license?: string | null;
+  county?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+}
+
+/** One entry in the tamper-evident, hash-chained audit trail. */
+export interface AuditLogRead {
+  id: number;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  actor_id: string | null;
+  payload: Record<string, unknown>;
+  payload_hash: string;
+  prev_hash: string;
+  hash: string;
+  created_at: string;
+}
+
+/** Result of recomputing the audit hash chain end to end. */
+export interface AuditVerifyResult {
+  valid: boolean;
+  entries: number;
+  first_bad_hash: string | null;
+}
