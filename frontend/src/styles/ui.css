@@ -1573,3 +1573,95 @@
   font-size: var(--sh-fs-xs);
   white-space: nowrap;
 }
+
+/* -- Admin: fleet map ------------------------------------------------------ */
+/* z-index:0 + relative makes the map its own stacking context, so Leaflet's
+   internal panes and controls (which reach ~1000) can never paint over the
+   sticky app bar or the drawer, which live outside this context. */
+.sh-adm-map {
+  position: relative;
+  z-index: 0;
+  height: clamp(420px, 68vh, 760px);
+  border-radius: var(--sh-r-lg);
+  overflow: hidden;
+  border: 1px solid var(--sh-line);
+  box-shadow: var(--sh-shadow-sm);
+  background: var(--sh-surface-2);
+}
+.sh-adm-map__canvas { width: 100%; height: 100%; }
+.leaflet-container { font-family: var(--sh-font-sans); background: var(--sh-surface-2); }
+
+.sh-adm-map__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--sh-surface) 82%, transparent);
+  backdrop-filter: blur(2px);
+}
+.sh-adm-map__msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  text-align: center;
+  color: var(--sh-text-muted);
+  padding: var(--sh-sp-4);
+}
+.sh-adm-map__msg svg { width: 26px; height: 26px; color: var(--sh-amp-strong); }
+
+.sh-adm-map__legend {
+  position: absolute;
+  left: var(--sh-sp-3);
+  bottom: var(--sh-sp-3);
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sh-sp-3);
+  background: color-mix(in srgb, var(--sh-surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-md);
+  box-shadow: var(--sh-shadow-sm);
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-muted);
+}
+.sh-adm-map__legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sh-adm-map__legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #fff inset;
+}
+
+/* Map popup — match the app's surface language. */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--sh-r-md);
+  box-shadow: var(--sh-shadow-md);
+}
+.leaflet-popup-content { margin: var(--sh-sp-3) var(--sh-sp-4); }
+.sh-mappop__name { font-family: var(--sh-font-display); font-weight: 600; color: var(--sh-ink); }
+.sh-mappop__meta { font-size: var(--sh-fs-sm); color: var(--sh-text-muted); margin-top: 1px; }
+.sh-mappop__stat {
+  display: flex;
+  gap: var(--sh-sp-3);
+  margin-top: var(--sh-sp-2);
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text);
+  text-transform: capitalize;
+}
+.sh-mappop__fault {
+  margin-top: var(--sh-sp-2);
+  font-size: var(--sh-fs-xs);
+  font-weight: 600;
+  color: var(--sh-amp-strong);
+}
+.sh-mappop__fault.is-critical { color: var(--sh-alert); }
+.sh-mappop__ok { margin-top: var(--sh-sp-2); font-size: var(--sh-fs-xs); color: var(--sh-go); }
+@media (max-width: 380px) {
+  .sh-adm-map__legend { display: none; }
+}
