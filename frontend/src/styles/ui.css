@@ -1731,3 +1731,39 @@
   font-weight: 500;
 }
 .sh-select--sm { padding: var(--sh-sp-2) var(--sh-sp-3); font-size: var(--sh-fs-sm); }
+
+/* -- Admin: team ----------------------------------------------------------- */
+.sh-adm-member {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-3);
+  transition: opacity var(--sh-dur-1) var(--sh-ease);
+}
+.sh-adm-member[data-busy] { opacity: 0.55; pointer-events: none; }
+.sh-adm-member__email {
+  margin-top: 2px;
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+}
+.sh-adm-member__lic {
+  margin-top: 2px;
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-faint);
+}
+.sh-adm-member__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+  padding-top: var(--sh-sp-3);
+  border-top: 1px solid var(--sh-line);
+}
+.sh-adm-member__actions { display: flex; flex-wrap: wrap; gap: var(--sh-sp-2); }
+.sh-adm-member__edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-4);
+  padding-top: var(--sh-sp-3);
+  border-top: 1px solid var(--sh-line);
+}
