@@ -1230,3 +1230,229 @@
   width: 64px;
   height: 64px;
 }
+
+/* ============================================================================
+   Admin console — responsive back-office layout
+   A deliberate departure from the field app's phone-first bottom-tab shell: a
+   persistent ink sidebar on desktop that collapses into a slide-in drawer on
+   phones. The dark rail (drawn from the brand's silicon-cell indigo) signals
+   "back office"; the field app stays in daylight. Everything derives from
+   tokens.css and is namespaced .sh-adm* to avoid touching the field shell.
+   ============================================================================ */
+.sh-adm {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  min-height: 100dvh;
+  background: var(--sh-bg);
+}
+
+/* Top bar spans the full width above the rail + content. */
+.sh-adm__bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sh-sp-3);
+  height: calc(var(--sh-appbar-h) + var(--sh-safe-top));
+  padding: var(--sh-safe-top) var(--sh-sp-4) 0;
+  background: color-mix(in srgb, var(--sh-bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--sh-line);
+}
+.sh-adm__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: calc(var(--sh-sp-2) * -1);
+  border-radius: var(--sh-r-sm);
+  color: var(--sh-ink);
+}
+.sh-adm__menu:hover { background: var(--sh-surface-2); }
+.sh-adm__menu svg { width: 22px; height: 22px; }
+.sh-adm__console {
+  align-self: center;
+  padding: 2px 8px;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-pill);
+  font-family: var(--sh-font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+.sh-adm__net {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  padding: var(--sh-sp-1) var(--sh-sp-3);
+  border-radius: var(--sh-r-pill);
+  font-size: var(--sh-fs-sm);
+  font-weight: 500;
+}
+.sh-adm__net svg { width: 15px; height: 15px; }
+.sh-adm__net.is-online { background: var(--sh-go-soft); color: var(--sh-go); }
+.sh-adm__net.is-offline { background: var(--sh-warn-soft); color: var(--sh-amp-strong); }
+@media (max-width: 380px) {
+  .sh-adm__net-label { display: none; }
+}
+
+.sh-adm__body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+/* Sidebar: off-canvas drawer on phones, sticky column on desktop. */
+.sh-adm__side {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 45;
+  width: 264px;
+  max-width: 82vw;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sh-safe-top) 0 var(--sh-safe-bottom);
+  background: var(--sh-ink);
+  color: var(--sh-on-ink);
+  transform: translateX(-100%);
+  transition: transform var(--sh-dur-2) var(--sh-ease);
+  overflow-y: auto;
+}
+.sh-adm.is-drawer-open .sh-adm__side {
+  transform: translateX(0);
+  box-shadow: var(--sh-shadow-lg);
+}
+.sh-adm__side-head {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--sh-sp-3) var(--sh-sp-3) 0;
+}
+.sh-adm__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sh-r-sm);
+  color: var(--sh-on-ink-muted);
+}
+.sh-adm__close:hover { background: rgba(255, 255, 255, 0.08); color: var(--sh-on-ink); }
+.sh-adm__close svg { width: 22px; height: 22px; }
+
+.sh-adm__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sh-sp-3) var(--sh-sp-3) var(--sh-sp-5);
+}
+.sh-adm__link {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-sp-3);
+  padding: var(--sh-sp-3);
+  border-radius: var(--sh-r-md);
+  color: var(--sh-on-ink-muted);
+  font-size: var(--sh-fs-base);
+  font-weight: 500;
+  transition: background var(--sh-dur-1) var(--sh-ease),
+    color var(--sh-dur-1) var(--sh-ease);
+}
+.sh-adm__link:hover {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sh-on-ink);
+}
+.sh-adm__link svg { width: 19px; height: 19px; flex: none; }
+.sh-adm__link.is-active,
+.sh-adm__link.is-active:hover {
+  background: var(--sh-volt);
+  color: #fff;
+}
+
+.sh-adm__side-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+  padding: var(--sh-sp-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sh-adm__who { display: flex; flex-direction: column; min-width: 0; }
+.sh-adm__who-name {
+  font-weight: 600;
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-on-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sh-adm__who-role { font-size: var(--sh-fs-xs); color: var(--sh-on-ink-muted); }
+.sh-adm__signout {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  padding: var(--sh-sp-2) var(--sh-sp-3);
+  border-radius: var(--sh-r-sm);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--sh-on-ink-muted);
+  font-size: var(--sh-fs-sm);
+  font-weight: 500;
+  transition: background var(--sh-dur-1) var(--sh-ease),
+    color var(--sh-dur-1) var(--sh-ease);
+}
+.sh-adm__signout:hover { background: rgba(255, 255, 255, 0.08); color: var(--sh-on-ink); }
+.sh-adm__signout svg { width: 15px; height: 15px; }
+
+.sh-adm__main { flex: 1 1 auto; min-width: 0; }
+.sh-adm__content {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--sh-sp-5) var(--sh-sp-4) calc(var(--sh-sp-10) + var(--sh-safe-bottom));
+}
+
+.sh-adm__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(16, 21, 46, 0.44);
+  backdrop-filter: blur(1px);
+  animation: sh-fade-in var(--sh-dur-2) var(--sh-ease);
+}
+@keyframes sh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Desktop: rail becomes a permanent column; drawer chrome disappears. */
+@media (min-width: 900px) {
+  .sh-adm__menu,
+  .sh-adm__side-head,
+  .sh-adm__scrim { display: none; }
+  .sh-adm__side {
+    position: sticky;
+    top: calc(var(--sh-appbar-h) + var(--sh-safe-top));
+    align-self: flex-start;
+    z-index: 10;
+    height: calc(100dvh - var(--sh-appbar-h) - var(--sh-safe-top));
+    max-width: none;
+    transform: none;
+    box-shadow: none;
+    padding-top: var(--sh-sp-4);
+  }
+  .sh-adm__nav { padding-top: var(--sh-sp-2); }
+  .sh-adm__content { padding: var(--sh-sp-8) var(--sh-sp-8) var(--sh-sp-12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-adm__side { transition: none; }
+  .sh-adm__scrim { animation: none; }
+}
