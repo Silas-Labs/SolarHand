@@ -1,0 +1,5 @@
+# SolarHand backend — development & test dependencies
+-r requirements.txt
+
+pytest>=8.2
+pytest-cov>=5.0
