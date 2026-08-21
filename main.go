@@ -11,9 +11,12 @@ import (
 	"Simulator/SolarStations"
 	"Simulator/StationMetrics"
 	"Simulator/Telemetry"
+	"Simulator/Tickets"
 )
 
 func main() {
+
+	Tickets.GenerateTicket()
 
 	stations, err := SolarStations.LoadStations("data/stations.json")
 
