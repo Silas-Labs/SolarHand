@@ -54,6 +54,10 @@ frontend/dev-dist/
 frontend/build/
 *.tsbuildinfo
 
+# The unanchored Python 'lib/' rule above matches any dir named 'lib' at any
+# depth, which would silently exclude the PWA's source library. Keep it tracked.
+!frontend/src/lib/
+
 # ---- Env / secrets ----
 .env
 .env.*
