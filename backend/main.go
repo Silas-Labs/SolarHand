@@ -240,3 +240,101 @@ func handleWorkOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(workOrders)
 }
+
+func runSimulator(stations []SolarStations.Station) {
+	fmt.Printf("Starting telemetry simulator loop for %d stations...\n", len(stations))
+	for i := 0; ; i++ {
+		if i >= len(stations) {
+			i = 0
+		}
+
+		station := stations[i]
+		metrics := StationMetrics.Generate()
+
+		telemetry := Telemetry.Telemetry{
+			Timestamp:   time.Now().UTC(),
+			StationName: station.StationName,
+			Latitude:    station.Latitude,
+			Longitude:   station.Longitude,
+			Voltage:     metrics.Voltage,
+			Current:     metrics.Current,
+			Temperature: metrics.Temperature,
+			Power:       metrics.Power,
+			Status:      metrics.Status,
+		}
+
+		// Update in-memory station store
+		mu.Lock()
+		stationStore[telemetry.StationName] = telemetry
+		mu.Unlock()
+
+		// Also post to HTTP endpoint to verify API ingestion
+		_ = sendTelemetry(telemetry)
+
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func sendTelemetry(telemetry Telemetry.Telemetry) error {
+	data, err := json.Marshal(telemetry)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(
+		"http://localhost:8000/Stationmetrics",
+		"application/json",
+		bytes.NewBuffer(data),
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
+func main() {
+	stations, err := SolarStations.LoadStations("data/stations.json")
+	if err != nil {
+		log.Fatalf("Error loading stations JSON: %v", err)
+	}
+	fmt.Printf("Loaded %d solar stations from data/stations.json\n", len(stations))
+
+	// Pre-seed stationStore with initial state for all stations
+	mu.Lock()
+	for _, st := range stations {
+		stationStore[st.StationName] = Telemetry.Telemetry{
+			Timestamp:   time.Now().UTC(),
+			StationName: st.StationName,
+			Latitude:    st.Latitude,
+			Longitude:   st.Longitude,
+			Voltage:     18.5,
+			Current:     8.0,
+			Temperature: 30.0,
+			Power:       148.0,
+			Status:      "NORMAL",
+		}
+	}
+	mu.Unlock()
+
+	// Register API endpoints
+	http.HandleFunc("/Stationmetrics", handleStationMetrics)
+	http.HandleFunc("/api/stations", handleStations)
+	http.HandleFunc("/api/metrics/summary", handleMetricsSummary)
+	http.HandleFunc("/api/alerts", handleAlerts)
+	http.HandleFunc("/api/work-orders", handleWorkOrders)
+
+	// Start backend server on port 8000
+	fmt.Println("==================================================")
+	fmt.Println("🚀 SolarHand Backend Server listening on http://localhost:8000")
+	fmt.Println("==================================================")
+
+	// Launch simulator loop in goroutine
+	go runSimulator(stations)
+
+	// Listen and serve
+	err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatalf("Failed to start server on :8000: %v", err)
+	}
+}
