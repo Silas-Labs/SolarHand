@@ -297,6 +297,45 @@ class AuditVerifyResult(BaseModel):
     first_bad_hash: str | None = None
 
 
+# --- Analytics (Digital Twin Lite) -----------------------------------------
+AnalyticsSeverity = Literal[
+    "healthy", "minor", "moderate", "severe", "anomalous", "unknown"
+]
+
+
+class AnalyzeRequest(BaseModel):
+    """Ad-hoc performance check for an asset over a recent window.
+
+    ``energy_kwh`` is the metered generation over ``period_days`` ending on
+    ``reading_date``; the engine compares it against the physics-modelled
+    expected yield for the same window.
+    """
+
+    energy_kwh: float = Field(ge=0)
+    reading_date: date
+    period_days: int = Field(default=1, ge=1, le=92)
+    persist_fault: bool = False
+
+
+class AnalysisResponse(BaseModel):
+    asset_id: str
+    reading_id: str | None = None
+    severity: AnalyticsSeverity
+    summary: str
+    health_ratio: float | None = None          # actual / expected AC (~1 = healthy)
+    performance_ratio_iec: float | None = None  # classic IEC PR (~0.8 = healthy)
+    actual_kwh: float
+    expected_ac_kwh: float
+    expected_dc_ideal_kwh: float
+    reference_yield_hours: float
+    poa_insolation_kwh_m2: float
+    sample_count: int
+    window_start: datetime | None = None
+    window_end: datetime | None = None
+    likely_causes: list[str] = []
+    fault_id: str | None = None                 # set if a fault was persisted
+
+
 # --- Offline sync ----------------------------------------------------------
 class SyncPushRequest(BaseModel):
     """A batch of records queued offline on a device, pushed on reconnect."""

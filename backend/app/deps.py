@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.security import InvalidTokenError, decode_access_token
+from app.analytics.weather import OpenMeteoProvider, WeatherProvider
 
 # tokenUrl is relative to the app root; the login route lives at /auth/login.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -48,4 +49,19 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
-__all__ = ["get_db", "get_current_user", "require_admin", "oauth2_scheme"]
+def get_weather_provider() -> WeatherProvider:
+    """Weather source for the analytics engine.
+
+    Defaults to Open-Meteo; tests override this dependency with a deterministic
+    provider so analysis runs offline.
+    """
+    return OpenMeteoProvider()
+
+
+__all__ = [
+    "get_db",
+    "get_current_user",
+    "require_admin",
+    "get_weather_provider",
+    "oauth2_scheme",
+]

@@ -17,7 +17,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-PURE_TESTS=(tests/test_security.py tests/test_audit.py tests/test_sync_logic.py)
+PURE_TESTS=(tests/test_security.py tests/test_audit.py tests/test_sync_logic.py tests/test_analytics.py)
 
 run_pure() {
   echo "==> Pure-logic unit tests (stdlib unittest)"
