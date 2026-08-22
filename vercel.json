@@ -3,24 +3,24 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "functions": {
-    "backend/app/main.py": {
+    "api/index.py": {
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/auth/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/users/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/companies/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/assets/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/jobs/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/readings/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/faults/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/analytics/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/sync/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/audit/(.*)", "destination": "/backend/app/main.py" },
-    { "source": "/health", "destination": "/backend/app/main.py" },
-    { "source": "/docs", "destination": "/backend/app/main.py" },
-    { "source": "/openapi.json", "destination": "/backend/app/main.py" },
+    { "source": "/auth/(.*)", "destination": "/api/index.py" },
+    { "source": "/users/(.*)", "destination": "/api/index.py" },
+    { "source": "/companies/(.*)", "destination": "/api/index.py" },
+    { "source": "/assets/(.*)", "destination": "/api/index.py" },
+    { "source": "/jobs/(.*)", "destination": "/api/index.py" },
+    { "source": "/readings/(.*)", "destination": "/api/index.py" },
+    { "source": "/faults/(.*)", "destination": "/api/index.py" },
+    { "source": "/analytics/(.*)", "destination": "/api/index.py" },
+    { "source": "/sync/(.*)", "destination": "/api/index.py" },
+    { "source": "/audit/(.*)", "destination": "/api/index.py" },
+    { "source": "/health", "destination": "/api/index.py" },
+    { "source": "/docs", "destination": "/api/index.py" },
+    { "source": "/openapi.json", "destination": "/api/index.py" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
