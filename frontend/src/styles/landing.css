@@ -1,0 +1,571 @@
+/* ============================================================================
+   SolarHand — public landing page
+   ----------------------------------------------------------------------------
+   The only marketing surface in the app. It reuses the product's design
+   language (daylight ground, silicon-cell indigo, voltaic-blue interaction,
+   amber spent once) and its signature move: the Expected-vs-Actual performance
+   instrument that embodies how SolarHand detects underperformance without
+   any telemetry. Everything here is namespaced `.sh-lp*` to stay isolated
+   from the app shells.
+   ============================================================================ */
+
+.sh-lp {
+  min-height: 100dvh;
+  background: var(--sh-bg);
+  color: var(--sh-text);
+  overflow-x: hidden;
+}
+
+.sh-lp__wrap {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: var(--sh-sp-5);
+}
+
+/* -- Top bar ---------------------------------------------------------------- */
+.sh-lp__bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--sh-bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(8px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--sh-dur-2) var(--sh-ease);
+}
+.sh-lp__bar.is-stuck {
+  border-bottom-color: var(--sh-line);
+}
+.sh-lp__bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.sh-lp__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-3);
+  font-family: var(--sh-font-display);
+  font-weight: 600;
+  font-size: var(--sh-fs-md);
+  color: var(--sh-ink);
+  letter-spacing: -0.01em;
+}
+.sh-lp__brand svg {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--sh-r-sm);
+}
+
+/* -- Hero ------------------------------------------------------------------- */
+.sh-lp__hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--sh-sp-10);
+  align-items: center;
+  padding-block: clamp(var(--sh-sp-10), 7vw, 6rem) clamp(var(--sh-sp-10), 6vw, 5rem);
+}
+.sh-lp__herocopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-5);
+  animation: sh-lp-rise var(--sh-dur-3) var(--sh-ease) both;
+}
+.sh-lp__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wider);
+  color: var(--sh-volt-strong);
+}
+.sh-lp__eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1.5px;
+  background: var(--sh-volt);
+}
+.sh-lp__title {
+  font-family: var(--sh-font-display);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 5.4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--sh-ink);
+  max-width: 15ch;
+}
+.sh-lp__title em {
+  font-style: normal;
+  color: var(--sh-volt-strong);
+}
+.sh-lp__lede {
+  font-size: var(--sh-fs-md);
+  line-height: var(--sh-lh-normal);
+  color: var(--sh-text-muted);
+  max-width: 46ch;
+}
+.sh-lp__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sh-sp-3);
+  margin-top: var(--sh-sp-2);
+}
+.sh-lp__note {
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-faint);
+}
+.sh-lp__note code {
+  font-family: var(--sh-font-mono);
+  color: var(--sh-text-muted);
+  background: var(--sh-surface-2);
+  padding: 1px 6px;
+  border-radius: var(--sh-r-sm);
+}
+
+/* -- Signature: the Expected-vs-Actual instrument --------------------------- */
+.sh-lp__inst-frame {
+  position: relative;
+  animation: sh-lp-rise var(--sh-dur-3) var(--sh-ease) 80ms both;
+}
+.sh-lp__inst-frame::before {
+  /* a soft daylight lift behind the card */
+  content: "";
+  position: absolute;
+  inset: -14% -10% -20% -10%;
+  background: radial-gradient(
+    60% 55% at 70% 30%,
+    color-mix(in srgb, var(--sh-volt) 16%, transparent),
+    transparent 70%
+  );
+  filter: blur(6px);
+  z-index: 0;
+}
+.sh-lp__inst {
+  position: relative;
+  z-index: 1;
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-lg);
+  box-shadow: var(--sh-shadow-md);
+  padding: var(--sh-sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-5);
+}
+.sh-lp__inst::before {
+  /* busbar hairline, echoing the module motif */
+  content: "";
+  display: block;
+  height: 3px;
+  width: 46px;
+  border-radius: var(--sh-r-pill);
+  background: linear-gradient(90deg, var(--sh-volt), var(--sh-amp));
+}
+.sh-lp__inst-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+}
+.sh-lp__inst-site {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-faint);
+}
+.sh-lp__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-muted);
+}
+.sh-lp__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sh-volt);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--sh-volt) 60%, transparent);
+  animation: sh-lp-pulse 2.4s var(--sh-ease) infinite;
+}
+.sh-lp__figs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sh-sp-4);
+}
+.sh-lp__fig-label {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-faint);
+}
+.sh-lp__fig-value {
+  font-family: var(--sh-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: var(--sh-fs-2xl);
+  letter-spacing: -0.02em;
+  color: var(--sh-ink);
+  line-height: 1.1;
+}
+.sh-lp__fig-value small {
+  font-size: var(--sh-fs-sm);
+  font-weight: 500;
+  color: var(--sh-text-faint);
+  margin-left: 3px;
+}
+.sh-lp__fig--actual .sh-lp__fig-value {
+  color: var(--sh-amp-strong);
+}
+.sh-lp__meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-2);
+}
+.sh-lp__meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: var(--sh-r-pill);
+  background: var(--sh-surface-2);
+  overflow: hidden;
+}
+.sh-lp__meter-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--fill, 74%);
+  border-radius: var(--sh-r-pill);
+  background: linear-gradient(90deg, var(--sh-amp), var(--sh-amp-strong));
+  animation: sh-lp-fill var(--sh-dur-3) var(--sh-ease) 240ms both;
+}
+.sh-lp__meter-target {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 100%;
+  width: 2px;
+  background: var(--sh-ink-600);
+  border-radius: var(--sh-r-pill);
+}
+.sh-lp__meter-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-faint);
+}
+.sh-lp__inst-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+  padding-top: var(--sh-sp-4);
+  border-top: 1px solid var(--sh-line);
+}
+.sh-lp__pr {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sh-lp__pr b {
+  font-family: var(--sh-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sh-fs-lg);
+  color: var(--sh-ink);
+}
+.sh-lp__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--sh-r-pill);
+  background: var(--sh-amp-soft);
+  color: var(--sh-amp-strong);
+  font-weight: 600;
+  font-size: var(--sh-fs-sm);
+  border: 1px solid color-mix(in srgb, var(--sh-amp) 34%, transparent);
+}
+
+/* -- Signal strip ----------------------------------------------------------- */
+.sh-lp__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sh-sp-3) var(--sh-sp-6);
+  padding: var(--sh-sp-5) 0;
+  border-block: 1px solid var(--sh-line);
+}
+.sh-lp__signal {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+}
+.sh-lp__signal b {
+  color: var(--sh-ink);
+  font-weight: 600;
+}
+.sh-lp__signal svg {
+  width: 18px;
+  height: 18px;
+  color: var(--sh-volt);
+  flex: none;
+}
+
+/* -- Generic section scaffold ---------------------------------------------- */
+.sh-lp__section {
+  padding-block: clamp(var(--sh-sp-10), 7vw, 5.5rem);
+}
+.sh-lp__kicker {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wider);
+  color: var(--sh-volt-strong);
+  margin-bottom: var(--sh-sp-3);
+}
+.sh-lp__h2 {
+  font-family: var(--sh-font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3.4vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--sh-ink);
+  max-width: 20ch;
+}
+.sh-lp__sublede {
+  margin-top: var(--sh-sp-3);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-fs-md);
+  max-width: 56ch;
+}
+
+/* -- Problem cards ---------------------------------------------------------- */
+.sh-lp__grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sh-sp-4);
+  margin-top: var(--sh-sp-8);
+}
+.sh-lp__pain {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-lg);
+  padding: var(--sh-sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-2);
+}
+.sh-lp__pain-ico {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-volt-soft);
+  color: var(--sh-volt-strong);
+  margin-bottom: var(--sh-sp-2);
+}
+.sh-lp__pain-ico svg { width: 19px; height: 19px; }
+.sh-lp__pain h3 {
+  font-size: var(--sh-fs-md);
+  color: var(--sh-ink);
+}
+.sh-lp__pain p {
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+  line-height: var(--sh-lh-normal);
+}
+
+/* -- How it works: ordered loop -------------------------------------------- */
+.sh-lp__steps {
+  margin-top: var(--sh-sp-8);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sh-sp-4);
+  counter-reset: step;
+}
+.sh-lp__step {
+  position: relative;
+  padding-top: var(--sh-sp-5);
+  border-top: 2px solid var(--sh-line);
+}
+.sh-lp__step::before {
+  counter-increment: step;
+  content: "0" counter(step);
+  position: absolute;
+  top: -0.85rem;
+  left: 0;
+  background: var(--sh-bg);
+  padding-right: var(--sh-sp-2);
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-sm);
+  font-weight: 600;
+  color: var(--sh-volt-strong);
+}
+.sh-lp__step.is-verify::before { color: var(--sh-go); }
+.sh-lp__step h3 {
+  font-size: var(--sh-fs-base);
+  color: var(--sh-ink);
+  margin-bottom: var(--sh-sp-1);
+}
+.sh-lp__step p {
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+  line-height: var(--sh-lh-snug);
+}
+
+/* -- Two apps split --------------------------------------------------------- */
+.sh-lp__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sh-sp-5);
+  margin-top: var(--sh-sp-8);
+}
+.sh-lp__panel {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-lg);
+  padding: var(--sh-sp-6);
+  box-shadow: var(--sh-shadow-sm);
+}
+.sh-lp__panel-tag {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-faint);
+}
+.sh-lp__panel h3 {
+  font-size: var(--sh-fs-lg);
+  color: var(--sh-ink);
+  margin: var(--sh-sp-1) 0 var(--sh-sp-4);
+}
+.sh-lp__list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-3);
+}
+.sh-lp__list li {
+  display: flex;
+  gap: var(--sh-sp-3);
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+  line-height: var(--sh-lh-snug);
+}
+.sh-lp__list svg {
+  width: 17px;
+  height: 17px;
+  color: var(--sh-go);
+  flex: none;
+  margin-top: 2px;
+}
+.sh-lp__list b { color: var(--sh-ink); font-weight: 600; }
+
+/* -- Closing CTA band (kept light: indigo-tinted daylight) ----------------- */
+.sh-lp__cta-band {
+  margin-block: clamp(var(--sh-sp-10), 6vw, 4rem);
+  border-radius: var(--sh-r-xl);
+  border: 1px solid var(--sh-line);
+  background: linear-gradient(
+    140deg,
+    var(--sh-surface) 0%,
+    var(--sh-volt-soft) 100%
+  );
+  padding: clamp(var(--sh-sp-8), 5vw, var(--sh-sp-12));
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sh-sp-4);
+}
+.sh-lp__cta-band h2 {
+  font-family: var(--sh-font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3.6vw, 2.4rem);
+  letter-spacing: -0.02em;
+  color: var(--sh-ink);
+  max-width: 18ch;
+}
+.sh-lp__cta-band p {
+  color: var(--sh-text-muted);
+  max-width: 48ch;
+}
+.sh-lp__creds {
+  margin-top: var(--sh-sp-2);
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text-muted);
+  background: color-mix(in srgb, var(--sh-surface) 70%, transparent);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-md);
+  padding: var(--sh-sp-3) var(--sh-sp-4);
+}
+.sh-lp__creds b { color: var(--sh-ink); }
+
+/* -- Footer ----------------------------------------------------------------- */
+.sh-lp__foot {
+  border-top: 1px solid var(--sh-line);
+  padding-block: var(--sh-sp-8);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-4);
+  color: var(--sh-text-faint);
+  font-size: var(--sh-fs-sm);
+}
+.sh-lp__foot-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  color: var(--sh-text-muted);
+  font-weight: 500;
+}
+.sh-lp__foot-brand svg { width: 22px; height: 22px; border-radius: 6px; }
+
+/* -- Motion ----------------------------------------------------------------- */
+@keyframes sh-lp-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sh-lp-fill {
+  from { width: 0; }
+}
+@keyframes sh-lp-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sh-volt) 55%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* -- Responsive ------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .sh-lp__hero {
+    grid-template-columns: 1fr;
+    gap: var(--sh-sp-8);
+    padding-block: var(--sh-sp-10) var(--sh-sp-8);
+  }
+  .sh-lp__inst-frame { order: 2; }
+  .sh-lp__grid3 { grid-template-columns: 1fr; }
+  .sh-lp__steps { grid-template-columns: 1fr 1fr; gap: var(--sh-sp-6) var(--sh-sp-4); }
+  .sh-lp__split { grid-template-columns: 1fr; }
+}
+@media (max-width: 460px) {
+  .sh-lp__steps { grid-template-columns: 1fr; }
+  .sh-lp__signals { gap: var(--sh-sp-3) var(--sh-sp-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-lp__herocopy,
+  .sh-lp__inst-frame,
+  .sh-lp__meter-fill { animation: none; }
+  .sh-lp__live-dot { animation: none; }
+}

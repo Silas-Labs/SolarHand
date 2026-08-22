@@ -10,6 +10,7 @@ import {
   Activity,
   CheckCircle2,
   MapPin,
+  RefreshCw,
   ShieldAlert,
   Sun,
   TriangleAlert,
@@ -20,16 +21,18 @@ import { api } from "@/lib/api";
 import { useAsync } from "@/hooks/useAsync";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Chip, type ChipTone } from "@/components/ui/Chip";
 import { FaultBadge } from "@/components/ui/SeverityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Loading } from "@/components/ui/Spinner";
 import { toast } from "@/store/toast";
-import { FAULT_CATEGORY_LABEL, fmtRelative } from "@/lib/format";
+import { FAULT_CATEGORY_LABEL, FAULT_SOURCE_LABEL, fmtRelative } from "@/lib/format";
 import type {
   AssetRead,
   AssetStatus,
   FaultReportRead,
   FaultSeverity,
+  FaultSource,
   JobRead,
   JobStatus,
 } from "@/lib/types";
@@ -39,6 +42,14 @@ const SEVERITY_RANK: Record<FaultSeverity, number> = {
   critical: 3,
   warning: 2,
   info: 1,
+};
+
+/** Provenance chip tone — machine sources (telemetry/forecast) stand out. */
+const SOURCE_TONE: Record<FaultSource, ChipTone> = {
+  telemetry: "info",
+  forecast: "amber",
+  system: "neutral",
+  technician: "neutral",
 };
 
 const JOB_BAR: { status: JobStatus; tone: string }[] = [
@@ -66,6 +77,25 @@ export function AdminDashboard() {
   }, []);
 
   const [resolving, setResolving] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function onRollup() {
+    setRefreshing(true);
+    try {
+      const res = await api.runTelemetryRollup({ includeToday: false });
+      const n = res.readings.length;
+      toast.success(
+        n > 0
+          ? `Rolled up ${n} telemetry reading${n === 1 ? "" : "s"}.`
+          : "Telemetry is up to date — no new readings.",
+      );
+      reload();
+    } catch {
+      toast.error("Couldn't refresh telemetry. Try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const assetById = useMemo(() => {
     const m = new Map<string, AssetRead>();
@@ -120,7 +150,11 @@ export function AdminDashboard() {
               icon={<Sun aria-hidden />}
               label="Installed systems"
               value={kpis.assetsTotal}
-              foot={`${kpis.assetsActive} active`}
+              foot={
+                kpis.assetsConnected > 0
+                  ? `${kpis.assetsActive} active · ${kpis.assetsConnected} connected`
+                  : `${kpis.assetsActive} active`
+              }
               tone="info"
             />
             <KpiCard
@@ -194,7 +228,20 @@ export function AdminDashboard() {
 
           <div className="sh-adm-sectionhead">
             <h2 className="sh-title-sm">Open faults</h2>
-            <Link to="/admin/map" className="sh-linklike">View on map</Link>
+            <div className="sh-row" style={{ gap: "var(--sh-sp-3)", alignItems: "center" }}>
+              {kpis.assetsConnected > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={<RefreshCw aria-hidden />}
+                  loading={refreshing}
+                  onClick={() => void onRollup()}
+                >
+                  Refresh telemetry
+                </Button>
+              )}
+              <Link to="/admin/map" className="sh-linklike">View on map</Link>
+            </div>
           </div>
 
           {recentFaults.length === 0 ? (
@@ -214,6 +261,9 @@ export function AdminDashboard() {
                           <span className="sh-title-sm">
                             {FAULT_CATEGORY_LABEL[fault.category]}
                           </span>
+                          <Chip tone={SOURCE_TONE[fault.source]}>
+                            {FAULT_SOURCE_LABEL[fault.source]}
+                          </Chip>
                         </div>
                         <div className="sh-jobcard__meta">
                           <MapPin aria-hidden />
@@ -304,6 +354,7 @@ function BarRow({
 interface Kpis {
   assetsTotal: number;
   assetsActive: number;
+  assetsConnected: number;
   assetsByStatus: Record<AssetStatus, number>;
   faultsOpen: number;
   faultsCritical: number;
@@ -341,6 +392,7 @@ function summarize(data: {
   return {
     assetsTotal: data?.assets.length ?? 0,
     assetsActive: assetsByStatus.active,
+    assetsConnected: (data?.assets ?? []).filter((a) => a.telemetry_enabled).length,
     assetsByStatus,
     faultsOpen: faults.length,
     faultsCritical: faults.filter((f) => f.severity === "critical").length,
