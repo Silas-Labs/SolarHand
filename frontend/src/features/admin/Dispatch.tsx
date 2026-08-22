@@ -76,24 +76,26 @@ export function Dispatch() {
   const [submitting, setSubmitting] = useState(false);
 
   const assets = useMemo(
-    () => [...(data?.assets ?? [])].sort((a, b) => a.customer_name.localeCompare(b.customer_name)),
+    () => {
+      const rows = Array.isArray(data?.assets) ? data.assets : [];
+      return [...rows].sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+    },
     [data],
   );
-  const assignable = useMemo(
-    () =>
-      (data?.users ?? [])
-        .filter((u) => u.is_active)
-        .sort((a, b) => a.full_name.localeCompare(b.full_name)),
-    [data],
-  );
+  const assignable = useMemo(() => {
+    const users = Array.isArray(data?.users) ? data.users : [];
+    return users
+      .filter((u) => u.is_active)
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  }, [data]);
   const assetById = useMemo(() => {
     const m = new Map<string, AssetRead>();
-    for (const a of data?.assets ?? []) m.set(a.id, a);
+    for (const a of assets) m.set(a.id, a);
     return m;
-  }, [data]);
+  }, [assets]);
   const userById = useMemo(() => {
     const m = new Map<string, UserRead>();
-    for (const u of data?.users ?? []) m.set(u.id, u);
+    for (const u of Array.isArray(data?.users) ? data.users : []) m.set(u.id, u);
     return m;
   }, [data]);
 
@@ -104,7 +106,7 @@ export function Dispatch() {
       done: [],
       cancelled: [],
     };
-    for (const j of data?.jobs ?? []) g[j.status].push(j);
+    for (const j of Array.isArray(data?.jobs) ? data.jobs : []) g[j.status].push(j);
     for (const status of STATUS_ORDER) {
       g[status].sort((a, b) => {
         const p = PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority];

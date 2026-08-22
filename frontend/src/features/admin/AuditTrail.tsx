@@ -48,14 +48,15 @@ export function AuditTrail() {
 
   const userById = useMemo(() => {
     const m = new Map<string, UserRead>();
-    for (const u of users.data ?? []) m.set(u.id, u);
+    const rows = Array.isArray(users.data) ? users.data : [];
+    for (const u of rows) m.set(u.id, u);
     return m;
   }, [users.data]);
 
-  const entries = useMemo(
-    () => [...(log.data ?? [])].sort((a, b) => b.id - a.id),
-    [log.data],
-  );
+  const entries = useMemo(() => {
+    const rows = Array.isArray(log.data) ? log.data : [];
+    return [...rows].sort((a, b) => b.id - a.id);
+  }, [log.data]);
   const types = useMemo(
     () => Array.from(new Set(entries.map((e) => e.entity_type))).sort(),
     [entries],

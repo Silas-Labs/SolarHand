@@ -67,23 +67,28 @@ export function AdminDashboard() {
 
   const [resolving, setResolving] = useState<string | null>(null);
 
+  const assets = useMemo(() => (Array.isArray(data?.assets) ? data.assets : []), [data]);
+  const jobs = useMemo(() => (Array.isArray(data?.jobs) ? data.jobs : []), [data]);
+  const faults = useMemo(() => (Array.isArray(data?.faults) ? data.faults : []), [data]);
+  const users = useMemo(() => (Array.isArray(data?.users) ? data.users : []), [data]);
+
   const assetById = useMemo(() => {
     const m = new Map<string, AssetRead>();
-    for (const a of data?.assets ?? []) m.set(a.id, a);
+    for (const a of assets) m.set(a.id, a);
     return m;
-  }, [data]);
+  }, [assets]);
 
-  const kpis = useMemo(() => summarize(data), [data]);
+  const kpis = useMemo(() => summarize({ assets, jobs, faults, users }), [assets, jobs, faults, users]);
 
   const recentFaults = useMemo(() => {
-    const faults = [...(data?.faults ?? [])];
-    faults.sort((a, b) => {
+    const sorted = [...faults];
+    sorted.sort((a, b) => {
       const r = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];
       if (r !== 0) return r;
       return b.created_at.localeCompare(a.created_at);
     });
-    return faults.slice(0, 6);
-  }, [data]);
+    return sorted.slice(0, 6);
+  }, [faults]);
 
   async function onResolve(fault: FaultReportRead) {
     setResolving(fault.id);

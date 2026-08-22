@@ -43,16 +43,16 @@ export function AssetsPage() {
   }, [pending, lastSyncedAt]);
 
   const visible = useMemo(() => {
-    if (!data) return [];
+    const assets = Array.isArray(data?.assets) ? data.assets : [];
     const term = q.trim().toLowerCase();
     const filtered = term
-      ? data.assets.filter((a) =>
+      ? assets.filter((a) =>
           [a.customer_name, a.location_name, a.county ?? ""]
             .join(" ")
             .toLowerCase()
             .includes(term),
         )
-      : data.assets;
+      : assets;
     return [...filtered].sort((a, b) =>
       a.customer_name.localeCompare(b.customer_name),
     );

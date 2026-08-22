@@ -55,7 +55,8 @@ export function Compliance() {
   // signed-in admin if they hold a licence, else the first licensed technician.
   useEffect(() => {
     if (!head.data || technicianId) return;
-    const licensed = head.data.users.filter(
+    const users = Array.isArray(head.data.users) ? head.data.users : [];
+    const licensed = users.filter(
       (u) => u.is_active && u.epra_technician_license,
     );
     const mine = licensed.find((u) => u.id === currentUserId);
