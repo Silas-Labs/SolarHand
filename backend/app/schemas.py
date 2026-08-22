@@ -25,7 +25,12 @@ FaultCategory = Literal[
     "clipping", "wiring", "other",
 ]
 FaultSeverity = Literal["info", "warning", "critical"]
-FaultSource = Literal["technician", "system"]
+# "technician" = reported by a person; "system" = Digital-Twin performance check
+# on a reading; "telemetry" = diagnosed from a connected device's channels;
+# "forecast" = raised pre-emptively by the trend forecaster.
+FaultSource = Literal["technician", "system", "telemetry", "forecast"]
+# Where a reading came from. Both origins run the identical physics/fault path.
+ReadingSource = Literal["manual", "telemetry"]
 
 
 class ORMModel(BaseModel):
@@ -153,6 +158,8 @@ class AssetBase(BaseModel):
     inverter_kva: float | None = Field(default=None, ge=0)
     battery_kwh: float | None = Field(default=None, ge=0)
     module_type: str | None = None
+    telemetry_enabled: bool = False
+    device_id: str | None = None
     install_date: date | None = None
     status: AssetStatus = "active"
     notes: str | None = None
@@ -177,6 +184,8 @@ class AssetUpdate(BaseModel):
     inverter_kva: float | None = Field(default=None, ge=0)
     battery_kwh: float | None = Field(default=None, ge=0)
     module_type: str | None = None
+    telemetry_enabled: bool | None = None
+    device_id: str | None = None
     install_date: date | None = None
     status: AssetStatus | None = None
     notes: str | None = None
@@ -242,6 +251,7 @@ class ReadingBase(BaseModel):
     period_days: int = Field(default=1, ge=1)
     meter_value: float | None = Field(default=None, ge=0)
     notes: str | None = None
+    source: ReadingSource = "manual"
 
 
 class ReadingCreate(ReadingBase):
@@ -252,6 +262,8 @@ class ReadingCreate(ReadingBase):
 class ReadingRead(ORMModel, ReadingBase):
     id: str
     recorded_by: str | None = None
+    health_ratio: float | None = None
+    pr_iec: float | None = None
     created_at: datetime
     client_updated_at: datetime | None = None
 
@@ -265,6 +277,7 @@ class FaultReportBase(BaseModel):
     severity: FaultSeverity = "warning"
     source: FaultSource = "technician"
     description: str | None = None
+    detail: dict | None = None
 
 
 class FaultReportCreate(FaultReportBase):
@@ -334,6 +347,100 @@ class AnalysisResponse(BaseModel):
     window_end: datetime | None = None
     likely_causes: list[str] = []
     fault_id: str | None = None                 # set if a fault was persisted
+
+
+# --- Telemetry (connected sites) -------------------------------------------
+class TelemetrySampleIn(BaseModel):
+    """One normalized telemetry sample as it reaches the ingestion endpoint.
+
+    A device adapter produces this canonical shape from whatever a specific
+    gateway/inverter emits. All channels except ``ts`` are optional — a device
+    reports whatever subset it exposes.
+    """
+
+    ts: datetime
+    ac_power_w: float | None = Field(default=None, ge=0)
+    energy_kwh: float | None = Field(default=None, ge=0)
+    dc_string_voltages: list[float] | None = None
+    dc_current_a: float | None = Field(default=None, ge=0)
+    inverter_status: str | None = None
+    inverter_code: str | None = None
+    module_temp_c: float | None = None
+    grid_voltage_v: float | None = Field(default=None, ge=0)
+    raw: dict | None = None
+
+
+class TelemetryBatchIn(BaseModel):
+    """A batch a gateway POSTs to ``/telemetry`` (authenticated by gateway key).
+
+    ``format`` names the adapter that normalizes ``samples`` — "canonical" is the
+    shape our gateway/simulator emits; other values map to real-protocol
+    adapters (a documented stub in this build). The device is resolved to its
+    asset by ``device_id``; ``asset_id`` may be supplied to disambiguate.
+    """
+
+    device_id: str = Field(min_length=1, max_length=64)
+    asset_id: str | None = None
+    format: str = "canonical"
+    samples: list[dict] = Field(min_length=1)
+
+
+class TelemetryIngestResponse(BaseModel):
+    asset_id: str
+    device_id: str
+    accepted: int
+    duplicates: int
+    diagnosis_fault_id: str | None = None  # set if ingest diagnosed a live fault
+
+
+class TelemetrySampleRead(ORMModel):
+    id: str
+    asset_id: str
+    device_id: str | None = None
+    ts: datetime
+    ac_power_w: float | None = None
+    energy_kwh: float | None = None
+    dc_string_voltages: list[float] | None = None
+    dc_current_a: float | None = None
+    inverter_status: str | None = None
+    inverter_code: str | None = None
+    module_temp_c: float | None = None
+    grid_voltage_v: float | None = None
+    created_at: datetime
+
+
+class RollupResultItem(BaseModel):
+    asset_id: str
+    reading_id: str
+    reading_date: date
+    energy_kwh: float
+    severity: AnalyticsSeverity
+    health_ratio: float | None = None
+    fault_id: str | None = None
+
+
+class RollupResponse(BaseModel):
+    processed_assets: int
+    readings: list[RollupResultItem] = []
+
+
+class ForecastResponse(BaseModel):
+    """Statistical trend projection over a connected site's PR history.
+
+    Pure least-squares slope on ``health_ratio`` vs. time — explainable, no ML.
+    ``early_warning`` is true when a healthy site is trending toward the
+    attention threshold within the projection horizon.
+    """
+
+    asset_id: str
+    points: int
+    current_health_ratio: float | None = None
+    slope_per_day: float | None = None
+    threshold: float
+    projected_cross_date: date | None = None
+    days_to_threshold: int | None = None
+    early_warning: bool = False
+    summary: str
 
 
 # --- Offline sync ----------------------------------------------------------

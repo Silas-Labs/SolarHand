@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 720  # 12h — long enough for a field shift
 
+    # --- Telemetry gateway ---
+    # Shared secret a connected site's gateway (or the labeled simulator) presents
+    # in the ``X-Gateway-Key`` header to POST /telemetry. Device ingestion is
+    # machine-to-machine, so it authenticates with this key rather than a human
+    # JWT session. Dev default is insecure on purpose; override in .env/production.
+    gateway_key: str = "dev-gateway-key-change-me"
+
     # --- CORS ---
     # Accepts a comma-separated string in the env; normalised to a list.
     #

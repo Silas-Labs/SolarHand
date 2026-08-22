@@ -73,6 +73,7 @@ def _register_routers(app: FastAPI) -> None:
         jobs,
         readings,
         sync,
+        telemetry,
         users,
     )
 
@@ -84,6 +85,7 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(readings.router)
     app.include_router(faults.router)
     app.include_router(analytics.router)
+    app.include_router(telemetry.router)
     app.include_router(sync.router)
     app.include_router(audit_log.router)
 
