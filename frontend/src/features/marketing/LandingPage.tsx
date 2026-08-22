@@ -32,6 +32,7 @@ export function LandingPage() {
   }, []);
 
   const goDemo = () => navigate("/login");
+  const goPortal = () => navigate("/portal");
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -44,9 +45,14 @@ export function LandingPage() {
             <BrandMark />
             SolarHand
           </span>
-          <Button size="sm" variant="ghost" onClick={goDemo}>
-            Sign in
-          </Button>
+          <span className="sh-lp__bar-actions">
+            <Button size="sm" variant="ghost" onClick={goPortal}>
+              Owner portal
+            </Button>
+            <Button size="sm" variant="ghost" onClick={goDemo}>
+              Sign in
+            </Button>
+          </span>
         </div>
       </header>
 

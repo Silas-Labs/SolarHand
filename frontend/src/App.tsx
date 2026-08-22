@@ -4,8 +4,8 @@
    in the offline-first AppShell (bottom-tab field app). The role decides which
    shell and route tree mount. */
 
-import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "@/store/auth";
 import { AppShell } from "@/components/AppShell";
 import { AdminShell } from "@/components/AdminShell";
@@ -49,6 +49,11 @@ const Compliance = lazy(() =>
 const AuditTrail = lazy(() =>
   import("@/features/admin/AuditTrail").then((m) => ({ default: m.AuditTrail })));
 
+// Customer portal — a parallel, self-contained surface (its own demo session),
+// code-split so installer/technician sessions never download it.
+const PortalApp = lazy(() =>
+  import("@/features/portal/PortalApp").then((m) => ({ default: m.PortalApp })));
+
 function Splash() {
   return (
     <div className="sh-splash">
@@ -61,6 +66,17 @@ function Splash() {
 export default function App() {
   const status = useAuth((s) => s.status);
   const user = useAuth((s) => s.user);
+  const { pathname } = useLocation();
+
+  // Customer portal is a parallel surface with its own session — mount it for
+  // any /portal path regardless of the installer/technician/admin auth state.
+  if (pathname === "/portal" || pathname.startsWith("/portal/")) {
+    return (
+      <Suspense fallback={<Splash />}>
+        <PortalApp />
+      </Suspense>
+    );
+  }
 
   // First paint, before bootstrap has resolved the cached session.
   if (status === "unknown") return <Splash />;

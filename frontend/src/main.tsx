@@ -19,6 +19,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/ui.css";
 import "./styles/landing.css";
+import "./styles/portal.css";
 
 import App from "./App";
 import { useAuth } from "@/store/auth";
