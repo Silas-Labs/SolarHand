@@ -101,7 +101,10 @@ export function ReadingCapture() {
       period_days: period,
       meter_value: Number.isFinite(meter as number) ? meter : null,
       notes: notes.trim() || null,
+      source: "manual",
       recorded_by: user?.id ?? null,
+      health_ratio: null,
+      pr_iec: null,
       created_at: nowIso(),
       client_updated_at: nowIso(),
     };
@@ -154,6 +157,7 @@ export function ReadingCapture() {
       severity: faultSeverityFor(result.severity),
       source: "technician",
       description: result.summary,
+      detail: null,
       resolved: false,
       created_at: nowIso(),
     };

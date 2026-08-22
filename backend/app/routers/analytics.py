@@ -15,21 +15,20 @@ from sqlalchemy.orm import Session
 
 from app import audit
 from app.analytics import engine as eng
-from app.analytics.faults import Severity
+from app.analytics.faults import PERSIST_FAULT_MAP
+from app.analytics.forecast import DEFAULT_HORIZON_DAYS, forecast_health
 from app.analytics.weather import WeatherProvider
 from app.deps import get_current_user, get_db, get_weather_provider
 from app.models import Asset, FaultReport, Reading, User
-from app.schemas import AnalysisResponse, AnalyzeRequest
+from app.schemas import AnalysisResponse, AnalyzeRequest, ForecastResponse
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
-# Analytics severity -> persisted FaultReport (category, FaultSeverity). Only
-# the actionable bands are mapped; healthy/anomalous/unknown never persist.
-_FAULT_MAP: dict[str, tuple[str, str]] = {
-    Severity.MINOR: ("soiling", "warning"),
-    Severity.MODERATE: ("shading", "warning"),
-    Severity.SEVERE: ("inverter_fault", "critical"),
-}
+# Analytics severity -> persisted FaultReport (category, FaultSeverity). Shared
+# with the telemetry rollup (single source of truth in app.analytics.faults) so
+# an energy-based fault is identical whether a manual reading or a telemetry
+# roll-up produced it. Only actionable bands map; healthy/anomalous never do.
+_FAULT_MAP = PERSIST_FAULT_MAP
 
 
 def _assert_asset_in_company(db: Session, asset_id: str, company_id: str) -> Asset:
@@ -159,8 +158,51 @@ def analyze_reading(
     asset = _assert_asset_in_company(db, reading.asset_id, current_user.company_id)
     result = _run(asset, reading.energy_kwh, reading.reading_date,
                   reading.period_days, provider)
+    # Cache the analysis on the reading so the trend forecaster has a health-ratio
+    # time series without re-running physics (see Reading.health_ratio/pr_iec).
+    reading.health_ratio = result.health_ratio
+    reading.pr_iec = result.performance_ratio_iec
     fault_id = None
     if persist_fault and result.is_fault:
         fault_id = _persist_fault(db, asset, result, current_user,
                                   reading_id=reading.id)
+    else:
+        db.commit()
     return _to_response(result, asset.id, reading_id=reading.id, fault_id=fault_id)
+
+
+@router.get("/assets/{asset_id}/forecast", response_model=ForecastResponse,
+            summary="Project a connected asset's health trend to the threshold")
+def forecast_asset(
+    asset_id: str,
+    horizon_days: int = Query(default=DEFAULT_HORIZON_DAYS, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ForecastResponse:
+    """Least-squares projection over an asset's cached health-ratio history.
+
+    Uses every scored reading (manual or telemetry) that has a cached
+    ``health_ratio``. Most useful for connected sites, whose daily telemetry
+    rollups produce a dense series; a healthy site trending toward the attention
+    threshold surfaces as an ``early_warning`` before it becomes lost generation.
+    """
+    asset = _assert_asset_in_company(db, asset_id, current_user.company_id)
+    rows = (
+        db.query(Reading)
+        .filter(Reading.asset_id == asset.id, Reading.health_ratio.isnot(None))
+        .order_by(Reading.reading_date.asc())
+        .all()
+    )
+    points = [(r.reading_date, r.health_ratio) for r in rows]
+    fc = forecast_health(points, horizon_days=horizon_days)
+    return ForecastResponse(
+        asset_id=asset.id,
+        points=fc.points,
+        current_health_ratio=fc.current_health_ratio,
+        slope_per_day=fc.slope_per_day,
+        threshold=fc.threshold,
+        projected_cross_date=fc.projected_cross_date,
+        days_to_threshold=fc.days_to_threshold,
+        early_warning=fc.early_warning,
+        summary=fc.summary,
+    )

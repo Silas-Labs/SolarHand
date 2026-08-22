@@ -111,6 +111,16 @@ class Asset(TimestampMixin, Base):
     battery_kwh: Mapped[float | None] = mapped_column(Float)
     module_type: Mapped[str | None] = mapped_column(String(100))
 
+    # Telemetry / connectivity. A "connected" asset has a field gateway (or a
+    # PAYG-style embedded GSM module) that streams state to the server. Most
+    # assets are NOT connected — they are served by manual readings only, and
+    # everything downstream works identically for both. ``device_id`` is the
+    # gateway identifier a telemetry batch authenticates against.
+    telemetry_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    device_id: Mapped[str | None] = mapped_column(String(64), index=True)
+
     install_date: Mapped[date | None] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
@@ -126,6 +136,9 @@ class Asset(TimestampMixin, Base):
         back_populates="asset", cascade="all, delete-orphan"
     )
     readings: Mapped[list["Reading"]] = relationship(
+        back_populates="asset", cascade="all, delete-orphan"
+    )
+    telemetry_samples: Mapped[list["TelemetrySample"]] = relationship(
         back_populates="asset", cascade="all, delete-orphan"
     )
 
@@ -193,6 +206,17 @@ class Reading(Base):
     meter_value: Mapped[float | None] = mapped_column(Float)  # optional cumulative meter
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Origin of this reading: "manual" (a technician entered it) or "telemetry"
+    # (rolled up from a connected gateway's samples). Everything downstream —
+    # physics, faults, sync, audit — treats both identically. Defaults to
+    # "manual" so existing rows and callers are unchanged.
+    source: Mapped[str] = mapped_column(String(20), default="manual", nullable=False)
+    # Cached results of the last Digital-Twin analysis of this reading, so the
+    # trend forecaster has a time series without re-running physics. Nullable:
+    # a reading is only scored once analysis has run against it.
+    health_ratio: Mapped[float | None] = mapped_column(Float)  # actual / expected AC
+    pr_iec: Mapped[float | None] = mapped_column(Float)        # IEC 61724 performance ratio
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     client_updated_at: Mapped[datetime | None] = mapped_column(DateTime)
 
@@ -213,9 +237,63 @@ class FaultReport(Base):
     severity: Mapped[str] = mapped_column(String(20), default="warning", nullable=False)
     source: Mapped[str] = mapped_column(String(20), default="technician", nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    # Structured extras for device-diagnosed / forecast faults: probable cause,
+    # recommended_parts, a channel snapshot, or a forecast projection. Free-form
+    # JSON so it stays additive; technician-reported faults leave it null.
+    detail: Mapped[dict | None] = mapped_column(JSON)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+
+class TelemetrySample(Base):
+    """A single telemetry sample from a connected site's gateway.
+
+    Telemetry arrives from a device gateway over cellular (in this build, from a
+    labeled simulator posting to the same endpoint), **not** from the offline
+    technician app — so there is no ``client_updated_at`` and no offline-sync
+    bookkeeping here. Samples carry the device's own ``ts`` and are
+    server-timestamped on arrival. A daily rollup aggregates samples into a
+    ``Reading(source="telemetry")`` that flows through the normal physics/fault
+    pipeline; the diagnostic channels below add the *cause* a single energy
+    number cannot give.
+
+    Idempotency: the ingestion endpoint de-duplicates on ``(asset_id, ts)`` so a
+    gateway retrying over flaky signal does not double-count.
+    """
+
+    __tablename__ = "telemetry_samples"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    asset_id: Mapped[str] = mapped_column(
+        ForeignKey("assets.id"), nullable=False, index=True
+    )
+    device_id: Mapped[str | None] = mapped_column(String(64), index=True)
+
+    # Device's own timestamp for the sample (UTC).
+    ts: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+
+    # Energy channels.
+    ac_power_w: Mapped[float | None] = mapped_column(Float)   # instantaneous AC power
+    energy_kwh: Mapped[float | None] = mapped_column(Float)   # energy since previous sample
+
+    # Diagnostic channels — the "why". Per-string DC voltages as a JSON list,
+    # plus current, inverter status/fault code, module temperature and grid
+    # voltage. All nullable: a device reports whatever subset it exposes.
+    dc_string_voltages: Mapped[list | None] = mapped_column(JSON)
+    dc_current_a: Mapped[float | None] = mapped_column(Float)
+    inverter_status: Mapped[str | None] = mapped_column(String(20))  # ok/fault/offline
+    inverter_code: Mapped[str | None] = mapped_column(String(40))    # vendor fault code
+    module_temp_c: Mapped[float | None] = mapped_column(Float)
+    grid_voltage_v: Mapped[float | None] = mapped_column(Float)
+
+    # The pre-normalization payload the adapter received, kept for traceability
+    # (shows the adapter turning a device's own shape into the canonical sample).
+    raw: Mapped[dict | None] = mapped_column(JSON)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+    asset: Mapped["Asset"] = relationship(back_populates="telemetry_samples")
 
 
 class AuditLog(Base):

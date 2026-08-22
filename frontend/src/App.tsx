@@ -12,6 +12,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { BrandMark } from "@/components/BrandMark";
 import { Spinner } from "@/components/ui/Spinner";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { LandingPage } from "@/features/marketing/LandingPage";
 
 /* Route components are code-split so each role only downloads what it uses.
    The service worker precaches every emitted JS chunk, so offline navigation
@@ -67,8 +68,9 @@ export default function App() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }

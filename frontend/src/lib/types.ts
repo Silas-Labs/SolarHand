@@ -28,7 +28,11 @@ export type FaultCategory =
   | "wiring"
   | "other";
 export type FaultSeverity = "info" | "warning" | "critical";
-export type FaultSource = "technician" | "system";
+// "technician" = reported by a person; "system" = Digital-Twin performance check;
+// "telemetry" = diagnosed from a connected device's channels; "forecast" = raised
+// pre-emptively by the trend forecaster.
+export type FaultSource = "technician" | "system" | "telemetry" | "forecast";
+export type ReadingSource = "manual" | "telemetry";
 export type AnalyticsSeverity =
   | "healthy"
   | "minor"
@@ -115,6 +119,8 @@ export interface AssetRead {
   inverter_kva: number | null;
   battery_kwh: number | null;
   module_type: string | null;
+  telemetry_enabled: boolean;
+  device_id: string | null;
   install_date: string | null;
   status: AssetStatus;
   notes: string | null;
@@ -167,7 +173,10 @@ export interface ReadingRead {
   period_days: number;
   meter_value: number | null;
   notes: string | null;
+  source: ReadingSource;
   recorded_by: string | null;
+  health_ratio: number | null;
+  pr_iec: number | null;
   created_at: string;
   client_updated_at: string | null;
 }
@@ -184,6 +193,16 @@ export interface ReadingUpsert {
   client_updated_at?: string | null;
 }
 
+/** Structured diagnosis payload carried on a telemetry/system fault
+ *  (mirror of backend `Diagnosis.as_detail()`). All fields optional — a
+ *  technician-reported fault carries no detail at all. */
+export interface FaultDetail {
+  probable_cause?: string;
+  recommended_parts?: string[];
+  channels?: Record<string, unknown>;
+  confidence?: string;
+}
+
 export interface FaultReportRead {
   id: string;
   asset_id: string;
@@ -193,6 +212,7 @@ export interface FaultReportRead {
   severity: FaultSeverity;
   source: FaultSource;
   description: string | null;
+  detail: FaultDetail | null;
   resolved: boolean;
   created_at: string;
 }
@@ -281,6 +301,8 @@ export interface AssetUpsert {
   inverter_kva?: number | null;
   battery_kwh?: number | null;
   module_type?: string | null;
+  telemetry_enabled?: boolean;
+  device_id?: string | null;
   install_date?: string | null;
   status?: AssetStatus;
   notes?: string | null;
@@ -329,4 +351,54 @@ export interface AuditVerifyResult {
   valid: boolean;
   entries: number;
   first_bad_hash: string | null;
+}
+
+/* -- Telemetry (connected sites) ---------------------------------------- */
+
+/** One raw telemetry sample from a connected device (mirror of the backend
+ *  `TelemetrySampleRead`). Every channel except `ts` is optional — a device
+ *  reports whatever subset it exposes. */
+export interface TelemetrySampleRead {
+  id: string;
+  asset_id: string;
+  device_id: string | null;
+  ts: string;
+  ac_power_w: number | null;
+  energy_kwh: number | null;
+  dc_string_voltages: number[] | null;
+  dc_current_a: number | null;
+  inverter_status: string | null;
+  inverter_code: string | null;
+  module_temp_c: number | null;
+  grid_voltage_v: number | null;
+  created_at: string;
+}
+
+/** Statistical trend projection over a connected site's PR history — pure
+ *  least-squares on health_ratio vs. time, no ML (mirror of `ForecastResponse`). */
+export interface ForecastResponse {
+  asset_id: string;
+  points: number;
+  current_health_ratio: number | null;
+  slope_per_day: number | null;
+  threshold: number;
+  projected_cross_date: string | null;
+  days_to_threshold: number | null;
+  early_warning: boolean;
+  summary: string;
+}
+
+export interface RollupResultItem {
+  asset_id: string;
+  reading_id: string;
+  reading_date: string;
+  energy_kwh: number;
+  severity: AnalyticsSeverity;
+  health_ratio: number | null;
+  fault_id: string | null;
+}
+
+export interface RollupResponse {
+  processed_assets: number;
+  readings: RollupResultItem[];
 }

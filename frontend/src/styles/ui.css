@@ -2047,3 +2047,133 @@
   overflow: auto;
   max-height: 320px;
 }
+
+/* ============================================================================
+   Telemetry — connected-device diagnosis, live feed & trend forecast
+   ============================================================================ */
+
+/* Structured diagnosis carried on a telemetry/forecast fault */
+.sh-dx {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-3);
+  margin-top: var(--sh-sp-3);
+  padding-top: var(--sh-sp-3);
+  border-top: 1px dashed var(--sh-line);
+}
+.sh-dx__lead {
+  font-weight: 600;
+  color: var(--sh-ink);
+}
+.sh-dx__channels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sh-sp-2) var(--sh-sp-4);
+  margin: 0;
+}
+.sh-dx__chan {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.sh-dx__chan dt {
+  font-family: var(--sh-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-faint);
+}
+.sh-dx__chan dd {
+  margin: 0;
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text);
+  font-variant-numeric: tabular-nums;
+}
+.sh-dx__parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sh-sp-2);
+}
+.sh-dx__conf {
+  font-size: var(--sh-fs-xs);
+}
+
+/* Separator when several diagnosed faults stack in one card */
+.sh-dx-group + .sh-dx-group {
+  margin-top: var(--sh-sp-2);
+  padding-top: var(--sh-sp-3);
+  border-top: 1px solid var(--sh-line);
+}
+
+/* Card header shared by the live-feed and forecast cards */
+.sh-tele__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+}
+.sh-tele__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-sp-2);
+  min-width: 0;
+}
+.sh-tele__ficon {
+  width: 17px;
+  height: 17px;
+  color: var(--sh-volt);
+  flex: none;
+}
+
+/* Subtle "live" pulse — one deliberate bit of motion, disabled on request */
+.sh-tele__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sh-go);
+  flex: none;
+  animation: sh-pulse 2.4s var(--sh-ease) infinite;
+}
+@keyframes sh-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sh-go) 55%, transparent); }
+  70% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--sh-go) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sh-go) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-tele__pulse { animation: none; }
+}
+
+.sh-tele__statusrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+  margin-top: var(--sh-sp-4);
+}
+
+/* Recent-samples mini list */
+.sh-tele__list {
+  margin-top: var(--sh-sp-4);
+  border-top: 1px solid var(--sh-line);
+}
+.sh-tele__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-sp-3);
+  padding: var(--sh-sp-2) 0;
+  border-bottom: 1px dashed var(--sh-line);
+}
+.sh-tele__row:last-child { border-bottom: none; }
+.sh-tele__time {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  color: var(--sh-text-faint);
+}
+.sh-tele__pwr {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-text);
+  font-variant-numeric: tabular-nums;
+}

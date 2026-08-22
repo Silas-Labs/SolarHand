@@ -81,6 +81,18 @@ _CAUSES = {
     ],
 }
 
+# Map an analytics severity onto a persisted ``FaultReport`` (category,
+# FaultSeverity). The single source of truth shared by the analytics router and
+# the telemetry rollup, so an energy-based fault looks identical no matter which
+# path (manual reading or telemetry roll-up) produced the reading. Only the
+# actionable bands map; healthy/anomalous/unknown never persist a fault.
+PERSIST_FAULT_MAP: dict[str, tuple[str, str]] = {
+    Severity.MINOR: ("soiling", "warning"),
+    Severity.MODERATE: ("shading", "warning"),
+    Severity.SEVERE: ("inverter_fault", "critical"),
+}
+
+
 
 def classify_performance(
     actual_kwh: float,

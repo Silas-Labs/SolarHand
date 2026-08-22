@@ -140,6 +140,29 @@ class Seeder:
                              "health_ratio": health_ratio})
         return f
 
+    def telemetry_sample(self, **kw) -> models.TelemetrySample:
+        """A single sample from a connected gateway (machine-origin).
+
+        No per-sample audit event — telemetry is high-volume; the ingestion
+        endpoint audits the batch, and the seed mirrors that.
+        """
+        t = self._add(models.TelemetrySample(**kw))
+        self._bump("telemetry_samples")
+        return t
+
+    def fault_diagnosed(self, **kw) -> models.FaultReport:
+        """A telemetry-diagnosed fault — mirrors the ingestion classifier.
+
+        Carries a structured ``detail`` (probable cause, recommended parts, a
+        channel snapshot) so the work order can dispatch with the *why*.
+        """
+        f = self._add(models.FaultReport(source="telemetry", **kw))
+        self._bump("faults")
+        self._event(entity_type="fault_report", entity_id=f.id, action="detect",
+                    payload={"asset_id": f.asset_id, "severity": f.severity,
+                             "source": "telemetry"})
+        return f
+
     def resolve(self, fault: models.FaultReport, actor_id=None) -> None:
         fault.resolved = True
         self.db.flush()
@@ -209,6 +232,7 @@ def _build(db) -> dict[str, int]:
                  county="Kisumu", latitude=-0.1000, longitude=34.7517,
                  tilt_deg=10, azimuth_deg=0, system_kwp=12.5, inverter_kva=10,
                  battery_kwh=20, module_type="Monocrystalline",
+                 telemetry_enabled=True, device_id="GW-CLINIC-01",
                  install_date=date(2024, 3, 11), status="active",
                  notes="Rooftop array over the outpatient wing; critical load backup.")
     std_components(a1, modules=24, module_wp=550, inverter_kva=10,
@@ -249,6 +273,7 @@ def _build(db) -> dict[str, int]:
                  county="Kisumu", latitude=-0.1569, longitude=35.1969,
                  tilt_deg=8, azimuth_deg=0, system_kwp=40.0, inverter_kva=36,
                  battery_kwh=None, module_type="Polycrystalline",
+                 telemetry_enabled=True, device_id="GW-MUHORONI-01",
                  install_date=date(2023, 5, 30), status="maintenance",
                  notes="Output declining — suspected soiling from cane dust/bagasse.")
     std_components(a5, modules=73, module_wp=550, inverter_kva=36,
@@ -325,6 +350,67 @@ def _build(db) -> dict[str, int]:
               energy_kwh=2600.0, period_days=30,
               notes="Down sharply vs baseline — logged during repair visit.")
 
+    # -- Telemetry (connected sites: a1 clinic, a5 Muhoroni) ----------------
+    # Only connected assets carry telemetry. a1 is healthy but on a gentle
+    # downward slope — the forecaster's early-warning demo; a5 has a collapsed
+    # DC string that the diagnostic channels expose — the "move with facts" demo.
+    #
+    # These telemetry Readings carry a pre-computed health_ratio/pr_iec, standing
+    # in for readings the daily rollup has already scored via the physics engine,
+    # so the trend forecaster has a series to project the moment the app boots.
+    a1_trend = [
+        # (days_ago, energy_kwh, health_ratio, pr_iec)
+        (12, 56.0, 1.000, 0.840),
+        (10, 55.2, 0.990, 0.832),
+        (8, 54.4, 0.980, 0.824),
+        (6, 53.8, 0.972, 0.817),
+        (4, 53.2, 0.963, 0.809),
+        (2, 52.8, 0.955, 0.802),
+    ]
+    for days, kwh, hr, pr in a1_trend:
+        s.reading(asset_id=a1.id, recorded_by=None, reading_date=_days_ago(days),
+                  energy_kwh=kwh, period_days=1, source="telemetry",
+                  health_ratio=hr, pr_iec=pr,
+                  notes="Daily rollup from connected gateway GW-CLINIC-01.")
+
+    def _sample_time(day_offset: int, hour: int) -> datetime:
+        d = _TODAY - timedelta(days=day_offset)
+        return datetime(d.year, d.month, d.day, hour, 0, 0)
+
+    # a1 — a healthy diurnal curve for today (feeds the live telemetry panel).
+    a1_curve = [
+        # (hour, ac_power_w, [string V], module_temp_c, grid_V, energy_kwh)
+        (7, 2800.0, [618.0, 616.0], 31.0, 239.0, 4.4),
+        (9, 7400.0, [611.0, 609.0], 41.0, 240.0, 12.8),
+        (11, 10200.0, [604.0, 602.0], 51.0, 241.0, 19.2),
+        (13, 9600.0, [601.0, 599.0], 55.0, 241.0, 18.4),
+        (15, 6300.0, [603.0, 601.0], 47.0, 240.0, 11.6),
+        (17, 2100.0, [612.0, 610.0], 36.0, 239.0, 3.4),
+    ]
+    for hour, w, strings, temp, grid, kwh in a1_curve:
+        s.telemetry_sample(
+            asset_id=a1.id, device_id="GW-CLINIC-01", ts=_sample_time(0, hour),
+            ac_power_w=w, energy_kwh=kwh, dc_string_voltages=strings,
+            dc_current_a=round(w / (sum(strings) or 1), 2),
+            inverter_status="ok", module_temp_c=temp, grid_voltage_v=grid,
+            raw={"src": "GW-CLINIC-01", "fmt": "canonical"})
+
+    # a5 — same clock, but DC string 2 has collapsed to 0 V while strings 1 & 3
+    # hold: the signature of an open string (blown fuse / disconnected MC4). AC
+    # output sits ~a third down; the inverter itself still reports OK.
+    a5_curve = [
+        (9, 12800.0, [612.0, 0.0, 606.0], 39.0, 241.0, 22.0),
+        (12, 17600.0, [604.0, 0.0, 601.0], 46.0, 242.0, 31.0),
+        (15, 11200.0, [606.0, 0.0, 603.0], 43.0, 241.0, 19.5),
+    ]
+    for hour, w, strings, temp, grid, kwh in a5_curve:
+        s.telemetry_sample(
+            asset_id=a5.id, device_id="GW-MUHORONI-01", ts=_sample_time(0, hour),
+            ac_power_w=w, energy_kwh=kwh, dc_string_voltages=strings,
+            dc_current_a=round(w / (sum(v for v in strings if v) or 1), 2),
+            inverter_status="ok", module_temp_c=temp, grid_voltage_v=grid,
+            raw={"src": "GW-MUHORONI-01", "fmt": "canonical"})
+
     # -- Faults -------------------------------------------------------------
     # Technician-reported soiling on the under-performer.
     s.fault_reported(asset_id=a5.id, job_id=j_repair.id, category="soiling",
@@ -335,6 +421,31 @@ def _build(db) -> dict[str, int]:
                      health_ratio=0.58,
                      description="Digital Twin Lite: measured yield ~58% of "
                                  "modelled expectation; possible string outage.")
+    # Telemetry-diagnosed on the same connected site: the device's per-string
+    # channels localize *which* string and *why* — the cause + parts the manual
+    # readings alone could not give. Tied to the open repair job so the work
+    # order dispatches with facts, not a guess.
+    s.fault_diagnosed(
+        asset_id=a5.id, job_id=j_repair.id, category="string_outage",
+        severity="critical",
+        description="Telemetry: DC string 2 open-circuit (0 V) while strings 1 & 3 "
+                    "nominal — an isolated string outage, not array-wide soiling.",
+        detail={
+            "probable_cause": "String 2 open-circuit — blown DC string fuse or a "
+                              "disconnected/arcing MC4 connector on that string.",
+            "recommended_parts": [
+                "DC string fuse (gPV, matched rating)",
+                "MC4 connector pair",
+                "spare DC combiner gland",
+            ],
+            "channels": {
+                "dc_string_voltages": [604.0, 0.0, 601.0],
+                "inverter_status": "ok",
+                "module_temp_c": 46.0,
+            },
+            "confidence": "high",
+            "source_samples": len(a5_curve),
+        })
     # A resolved inverter fault at Kombewa (shows a closed item in the trail).
     resolved = s.fault_reported(asset_id=a4.id, category="inverter_fault",
                                 severity="critical",
@@ -352,8 +463,8 @@ def _build(db) -> dict[str, int]:
 def _wipe(db) -> None:
     """Delete every row, children first (safe under enforced FKs too)."""
     for model in (models.AuditLog, models.FaultReport, models.Reading,
-                  models.Job, models.Component, models.Asset, models.User,
-                  models.Company):
+                  models.TelemetrySample, models.Job, models.Component,
+                  models.Asset, models.User, models.Company):
         db.query(model).delete(synchronize_session=False)
     db.commit()
 
