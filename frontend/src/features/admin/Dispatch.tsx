@@ -75,10 +75,13 @@ export function Dispatch() {
   const [form, setForm] = useState<JobForm>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
 
+  const compareText = (a?: string | null, b?: string | null) =>
+    (a ?? "").localeCompare(b ?? "");
+
   const assets = useMemo(
     () => {
       const rows = Array.isArray(data?.assets) ? data.assets : [];
-      return [...rows].sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+      return [...rows].sort((a, b) => compareText(a.customer_name, b.customer_name));
     },
     [data],
   );
@@ -86,7 +89,7 @@ export function Dispatch() {
     const users = Array.isArray(data?.users) ? data.users : [];
     return users
       .filter((u) => u.is_active)
-      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+      .sort((a, b) => compareText(a.full_name, b.full_name));
   }, [data]);
   const assetById = useMemo(() => {
     const m = new Map<string, AssetRead>();

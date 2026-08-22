@@ -47,14 +47,14 @@ export function AssetsPage() {
     const term = q.trim().toLowerCase();
     const filtered = term
       ? assets.filter((a) =>
-          [a.customer_name, a.location_name, a.county ?? ""]
+          [a.customer_name ?? "", a.location_name ?? "", a.county ?? ""]
             .join(" ")
             .toLowerCase()
             .includes(term),
         )
       : assets;
     return [...filtered].sort((a, b) =>
-      a.customer_name.localeCompare(b.customer_name),
+      (a.customer_name ?? "").localeCompare(b.customer_name ?? ""),
     );
   }, [data, q]);
 

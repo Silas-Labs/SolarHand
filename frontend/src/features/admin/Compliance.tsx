@@ -74,13 +74,18 @@ export function Compliance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailId]);
 
-  const assets = [...(head.data?.assets ?? [])].sort((a, b) =>
-    a.customer_name.localeCompare(b.customer_name),
+  const compareText = (a?: string | null, b?: string | null) =>
+    (a ?? "").localeCompare(b ?? "");
+
+  const assets = [...(Array.isArray(head.data?.assets) ? head.data.assets : [])].sort((a, b) =>
+    compareText(a.customer_name, b.customer_name),
   );
-  const licensedTechs = (head.data?.users ?? [])
+  const licensedTechs = (Array.isArray(head.data?.users) ? head.data.users : [])
     .filter((u) => u.is_active)
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
-  const technician = head.data?.users.find((u) => u.id === technicianId) ?? null;
+    .sort((a, b) => compareText(a.full_name, b.full_name));
+  const technician = (Array.isArray(head.data?.users) ? head.data.users : []).find(
+    (u) => u.id === technicianId,
+  ) ?? null;
 
   const canPrint = Boolean(detail.data);
 

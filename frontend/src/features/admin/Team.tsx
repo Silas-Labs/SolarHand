@@ -42,9 +42,9 @@ export function Team() {
 
   const members = useMemo(
     () =>
-      [...(data ?? [])].sort((a, b) => {
+      [...(Array.isArray(data) ? data : [])].sort((a, b) => {
         if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
-        return a.full_name.localeCompare(b.full_name);
+        return (a.full_name ?? "").localeCompare(b.full_name ?? "");
       }),
     [data],
   );
