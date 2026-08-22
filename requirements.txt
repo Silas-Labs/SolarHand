@@ -11,6 +11,7 @@ SQLAlchemy>=2.0.30,<2.1
 pydantic>=2.7,<3.0
 pydantic-settings>=2.3,<3.0
 email-validator>=2.1           # pydantic EmailStr
+psycopg[binary]>=3.1
 
 # --- Auth / security ---
 # JWT (HS256) is implemented in app/security.py using only the Python stdlib
