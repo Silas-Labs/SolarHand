@@ -321,6 +321,11 @@ function summarize(data: {
   faults: FaultReportRead[];
   users: { role: string; is_active: boolean }[];
 } | null): Kpis {
+  const assets = Array.isArray(data?.assets) ? data.assets : [];
+  const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
+  const faults = Array.isArray(data?.faults) ? data.faults : [];
+  const users = Array.isArray(data?.users) ? data.users : [];
+
   const assetsByStatus: Record<AssetStatus, number> = {
     active: 0,
     maintenance: 0,
@@ -332,19 +337,16 @@ function summarize(data: {
     done: 0,
     cancelled: 0,
   };
-  for (const a of data?.assets ?? []) assetsByStatus[a.status] += 1;
-  for (const j of data?.jobs ?? []) jobsByStatus[j.status] += 1;
-
-  const faults = data?.faults ?? [];
-  const users = data?.users ?? [];
+  for (const a of assets) assetsByStatus[a.status] += 1;
+  for (const j of jobs) jobsByStatus[j.status] += 1;
 
   return {
-    assetsTotal: data?.assets.length ?? 0,
+    assetsTotal: assets.length,
     assetsActive: assetsByStatus.active,
     assetsByStatus,
     faultsOpen: faults.length,
     faultsCritical: faults.filter((f) => f.severity === "critical").length,
-    jobsTotal: data?.jobs.length ?? 0,
+    jobsTotal: jobs.length,
     jobsOpen: jobsByStatus.pending + jobsByStatus.in_progress,
     jobsPending: jobsByStatus.pending,
     jobsByStatus,
