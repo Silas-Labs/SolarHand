@@ -228,6 +228,13 @@ The sync screen shows everything captured offline. Reconnect and push it; the au
 
 > Tip: to feel the offline-first behaviour, open the technician app, turn off your network (or use the browser devtools "Offline" toggle), complete a job and capture a reading, then reconnect and open the Sync screen.
 
+### 9. Owner portal — the customer's view
+
+Site owners have their own space at `/portal`, separate from the installer app. They sign in to see each system's current performance and plain-language verdict, download performance, savings and EPRA-compliance reports, and raise or track support tickets. Performance is modelled from verified readings — the portal never streams data off the inverters. It runs on a self-contained demo session with sample data, so it works even without the backend running.
+
+![Owner portal landing](docs/screenshots/11-portal-landing.png)
+![Owner portal overview](docs/screenshots/12-portal-overview.png)
+
 ---
 
 ## What's real vs. simulated in this build

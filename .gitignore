@@ -78,8 +78,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# QA walkthrough throwaway screenshots
-qa-visual/shots/
+# QA walkthrough tooling + throwaway screenshots (local only, never pushed)
+qa-visual/
 
 # Internal docs + QA tooling - kept locally, not tracked in the repo
 SolarHand_Pitch.md
