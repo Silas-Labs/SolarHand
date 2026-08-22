@@ -11,6 +11,8 @@ import {
   ClipboardCheck,
   RefreshCw,
   ArrowRight,
+  Wrench,
+  Building2,
 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/Button";
@@ -46,11 +48,11 @@ export function LandingPage() {
             SolarHand
           </span>
           <span className="sh-lp__bar-actions">
-            <Button size="sm" variant="ghost" onClick={goPortal}>
-              Owner portal
-            </Button>
             <Button size="sm" variant="ghost" onClick={goDemo}>
               Sign in
+            </Button>
+            <Button size="sm" onClick={goPortal}>
+              Owner portal
             </Button>
           </span>
         </div>
@@ -146,6 +148,35 @@ export function LandingPage() {
           </span>
         </div>
       </div>
+
+      {/* Two ways in — make both audiences first-class (owners had no obvious
+          door before; this is the fix). */}
+      <section className="sh-lp__wrap sh-lp__ways" aria-label="Choose your entry point">
+        <article className="sh-lp__way sh-lp__way--run">
+          <span className="sh-lp__way-ico"><Wrench /></span>
+          <span className="sh-lp__way-tag">For installers &amp; operations</span>
+          <h3>Run your installations</h3>
+          <p>
+            The offline-first console and field app: catch underperformance, dispatch the
+            fix, and keep an EPRA-ready audit trail across your whole fleet.
+          </p>
+          <button type="button" className="sh-lp__way-go" onClick={goDemo}>
+            Open the live demo <ArrowRight size={16} />
+          </button>
+        </article>
+        <article className="sh-lp__way sh-lp__way--own">
+          <span className="sh-lp__way-ico"><Building2 /></span>
+          <span className="sh-lp__way-tag">For system owners</span>
+          <h3>Check the solar you own</h3>
+          <p>
+            The owner portal: a plain-language read on every system you own, reports you can
+            hand to your board or the bank, and a direct line to your installer.
+          </p>
+          <button type="button" className="sh-lp__way-go" onClick={goPortal}>
+            Go to the owner portal <ArrowRight size={16} />
+          </button>
+        </article>
+      </section>
 
       {/* Problem */}
       <section className="sh-lp__wrap sh-lp__section">

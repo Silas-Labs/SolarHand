@@ -1,0 +1,226 @@
+/* ============================================================================
+   SolarHand — public-surface redesign layer  (scoped, additive)
+   ----------------------------------------------------------------------------
+   A warmer, more editorial visual world for the two *public* surfaces — the
+   installer landing (.sh-lp) and the owner portal (.sh-ptl public + .sh-pt
+   signed-in). It is applied by REMAPPING the design tokens inside those three
+   scopes only, so every existing rule in landing.css / portal.css (all of them
+   token-driven) re-skins automatically, while the installer/technician/admin
+   app — which reads the same token names from :root — is left untouched.
+
+   World:
+     · Ground   warm equatorial paper (bone), not the app's cool daylight blue
+     · Ink      warm espresso, not silicon indigo
+     · Interact deep pine green (was voltaic blue)
+     · Accent   marigold, spent once — the sun in the instrument
+     · Type     Bricolage Grotesque (display) / Figtree (body) / Spline Sans
+                Mono (data) — a deliberate break from Space Grotesk + IBM Plex
+   Imported last in main.tsx so overrides win the cascade at equal specificity.
+   ============================================================================ */
+
+.sh-lp,
+.sh-ptl,
+.sh-pt {
+  /* -- Type world ------------------------------------------------------- */
+  --sh-font-display: "Bricolage Grotesque", "Space Grotesk", system-ui, sans-serif;
+  --sh-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sh-font-mono: "Spline Sans Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* -- Warm espresso ink ------------------------------------------------ */
+  --sh-ink: #1e1810;
+  --sh-ink-800: #2b2216;
+  --sh-ink-700: #3a2e1d;
+  --sh-ink-600: #7a6644;
+
+  /* -- Interaction: deep pine green (was voltaic blue) ------------------ */
+  --sh-volt: #15624a;
+  --sh-volt-strong: #0e4835;
+  --sh-volt-soft: #dcecdf;
+
+  /* -- Accent: marigold — the one warm note ----------------------------- */
+  --sh-amp: #e8930c;
+  --sh-amp-strong: #ab6404;
+  --sh-amp-soft: #fbe8c6;
+
+  /* -- Semantic --------------------------------------------------------- */
+  --sh-go: #1f8d51;
+  --sh-go-soft: #e0f0e4;
+  --sh-warn: #cd8014;
+  --sh-warn-soft: #f9ecd1;
+  --sh-alert: #cb3a2a;
+  --sh-alert-soft: #f7e2dc;
+  --sh-info: #15624a;
+  --sh-info-soft: #dcecdf;
+
+  /* -- Neutrals: warm paper --------------------------------------------- */
+  --sh-bg: #f4efe3;
+  --sh-surface: #fffdf8;
+  --sh-surface-2: #ece4d4;
+  --sh-line: #e2d9c6;
+  --sh-line-strong: #cec1a7;
+
+  --sh-text: #241d12;
+  --sh-text-muted: #6b6151;
+  --sh-text-faint: #9a917d;
+  --sh-on-ink: #f7f1e4;
+  --sh-on-ink-muted: #cabfa6;
+
+  /* -- Warm-tinted elevation + focus ------------------------------------ */
+  --sh-shadow-sm: 0 1px 2px rgba(45, 30, 10, 0.06), 0 1px 3px rgba(45, 30, 10, 0.05);
+  --sh-shadow-md: 0 2px 10px rgba(45, 30, 10, 0.08), 0 8px 26px rgba(45, 30, 10, 0.06);
+  --sh-shadow-lg: 0 12px 40px rgba(45, 30, 10, 0.16);
+  --sh-ring: 0 0 0 3px var(--sh-volt-soft), 0 0 0 1.5px var(--sh-volt);
+}
+
+/* Bricolage Grotesque has generous spacing; pull display type in a touch so
+   headlines read as confident, not loose. */
+.sh-lp__title,
+.sh-ptl__title,
+.sh-lp__h2,
+.sh-ptl__h2,
+.sh-ptl__cta h2,
+.sh-lp__cta-band h2 {
+  letter-spacing: -0.028em;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Targeted overrides — where hardcoded (indigo) values can't follow the tokens
+   ========================================================================== */
+
+/* Owner-landing hero glow: was an indigo wash; make it warm sun + pine. */
+.sh-ptl__hero {
+  background:
+    radial-gradient(115% 130% at 88% -12%, rgba(232, 147, 12, 0.30), transparent 55%),
+    radial-gradient(90% 110% at 4% 8%, rgba(21, 98, 74, 0.34), transparent 60%),
+    linear-gradient(158deg, var(--sh-ink) 0%, var(--sh-ink-700) 100%);
+}
+
+/* Report modal scrim → warm espresso, matching the world. */
+.sh-pt-modal__backdrop {
+  background: rgba(30, 24, 16, 0.55);
+}
+
+/* Landing hero: warm the daylight-lift behind the instrument (was volt-only). */
+.sh-lp__inst-frame::before {
+  background: radial-gradient(
+    62% 56% at 72% 28%,
+    color-mix(in srgb, var(--sh-amp) 22%, transparent),
+    transparent 72%
+  );
+}
+
+/* ==========================================================================
+   Landing — first-class "two ways in" band
+   The original page hid the owner portal behind one small top-bar link; this
+   makes both audiences explicit right under the hero. Structural, not decor:
+   it encodes the product's actual split — the people who service solar vs. the
+   people who own it.
+   ========================================================================== */
+.sh-lp__ways {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sh-sp-5);
+  padding-block: clamp(var(--sh-sp-8), 5vw, var(--sh-sp-12));
+}
+.sh-lp__way {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-sp-3);
+  padding: clamp(var(--sh-sp-6), 3vw, var(--sh-sp-8));
+  border-radius: var(--sh-r-lg);
+  border: 1px solid var(--sh-line);
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+  overflow: hidden;
+  transition: transform var(--sh-dur-2) var(--sh-ease),
+    box-shadow var(--sh-dur-2) var(--sh-ease), border-color var(--sh-dur-2) var(--sh-ease);
+}
+.sh-lp__way::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sh-volt), var(--sh-amp));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--sh-dur-3) var(--sh-ease);
+}
+.sh-lp__way:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-shadow-md);
+  border-color: var(--sh-line-strong);
+}
+.sh-lp__way:hover::before {
+  transform: scaleX(1);
+}
+.sh-lp__way-ico {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--sh-r-md);
+  background: var(--sh-volt-soft);
+  color: var(--sh-volt-strong);
+}
+.sh-lp__way--own .sh-lp__way-ico {
+  background: var(--sh-amp-soft);
+  color: var(--sh-amp-strong);
+}
+.sh-lp__way-ico svg {
+  width: 23px;
+  height: 23px;
+}
+.sh-lp__way-tag {
+  font-family: var(--sh-font-mono);
+  font-size: var(--sh-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-faint);
+}
+.sh-lp__way h3 {
+  font-family: var(--sh-font-display);
+  font-weight: 700;
+  font-size: var(--sh-fs-lg);
+  letter-spacing: -0.02em;
+  color: var(--sh-ink);
+}
+.sh-lp__way p {
+  font-size: var(--sh-fs-sm);
+  line-height: var(--sh-lh-normal);
+  color: var(--sh-text-muted);
+  flex: 1;
+}
+.sh-lp__way-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--sh-font-sans);
+  font-weight: 600;
+  font-size: var(--sh-fs-sm);
+  color: var(--sh-volt-strong);
+}
+.sh-lp__way--own .sh-lp__way-go {
+  color: var(--sh-amp-strong);
+}
+.sh-lp__way-go svg {
+  transition: transform var(--sh-dur-2) var(--sh-ease);
+}
+.sh-lp__way:hover .sh-lp__way-go svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 860px) {
+  .sh-lp__ways {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-lp__way,
+  .sh-lp__way::before,
+  .sh-lp__way-go svg {
+    transition: none;
+  }
+}
