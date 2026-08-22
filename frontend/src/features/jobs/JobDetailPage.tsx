@@ -7,6 +7,7 @@ import {
   MapPin,
   Play,
   RotateCcw,
+  Stethoscope,
   XCircle,
 } from "lucide-react";
 import { db, updateJobStatusLocal } from "@/lib/db";
@@ -18,10 +19,17 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Loading } from "@/components/ui/Spinner";
+import { FaultBadge } from "@/components/ui/SeverityBadge";
+import { Diagnosis } from "@/components/Diagnosis";
 import { Checklist } from "./Checklist";
 import { CHECKLISTS } from "./checklists";
 import { JOB_STATUS_TONE, PRIORITY_LABEL } from "./jobMaps";
-import { JOB_STATUS_LABEL, JOB_TYPE_LABEL, fmtDate } from "@/lib/format";
+import {
+  FAULT_CATEGORY_LABEL,
+  JOB_STATUS_LABEL,
+  JOB_TYPE_LABEL,
+  fmtDate,
+} from "@/lib/format";
 import type { JobStatus } from "@/lib/types";
 
 export function JobDetailPage() {
@@ -38,11 +46,24 @@ export function JobDetailPage() {
   const { data, loading, reload } = useDexieQuery(async () => {
     const job = await db.jobs.get(id);
     const asset = job ? await db.assets.get(job.asset_id) : undefined;
-    return { job, asset };
+    // Diagnosed, still-open faults on this asset — what to inspect / bring.
+    const diagnosed = job
+      ? (await db.faults.where("asset_id").equals(job.asset_id).toArray())
+          .filter(
+            (f) =>
+              !f.resolved &&
+              f.detail != null &&
+              (Boolean(f.detail.probable_cause) ||
+                (f.detail.recommended_parts?.length ?? 0) > 0),
+          )
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      : [];
+    return { job, asset, diagnosed };
   }, [id, pending, lastSyncedAt]);
 
   const job = data?.job;
   const asset = data?.asset;
+  const diagnosed = data?.diagnosed ?? [];
 
   async function changeStatus(next: JobStatus) {
     if (!job) return;
@@ -108,6 +129,31 @@ export function JobDetailPage() {
               <Chip tone="info">{asset.system_kwp} kWp</Chip>
             </div>
           </Link>
+        )}
+
+        {diagnosed.length > 0 && (
+          <Card className="sh-stack">
+            <div className="sh-tele__head">
+              <span className="sh-tele__title">
+                <Stethoscope aria-hidden className="sh-tele__ficon" />
+                <span className="sh-title-sm">Diagnosis &amp; parts to bring</span>
+              </span>
+              <Chip tone="info">From telemetry</Chip>
+            </div>
+            <p className="sh-muted" style={{ marginTop: "-4px" }}>
+              Raised from this system&apos;s connected device — check these before
+              you head out.
+            </p>
+            {diagnosed.map((f) => (
+              <div key={f.id} className="sh-dx-group">
+                <div className="sh-row sh-row--between">
+                  <span className="sh-title-sm">{FAULT_CATEGORY_LABEL[f.category]}</span>
+                  <FaultBadge severity={f.severity} />
+                </div>
+                <Diagnosis detail={f.detail} />
+              </div>
+            ))}
+          </Card>
         )}
 
         {job.description && (

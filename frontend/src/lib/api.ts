@@ -15,15 +15,18 @@ import type {
   CompanyRead,
   CompanyUpdate,
   FaultReportRead,
+  ForecastResponse,
   JobRead,
   JobUpsert,
   ReadingRead,
   ReadingUpsert,
   RegisterRequest,
   RegisterResponse,
+  RollupResponse,
   SyncPullResponse,
   SyncPushRequest,
   SyncPushResponse,
+  TelemetrySampleRead,
   Token,
   UserCreate,
   UserRead,
@@ -237,6 +240,34 @@ export const api = {
       `/analytics/assets/${encodeURIComponent(assetId)}`,
       { method: "POST", body: payload },
     );
+  },
+  /** Least-squares trend projection over a connected asset's health history. */
+  getForecast(assetId: string, horizonDays?: number): Promise<ForecastResponse> {
+    const qs = horizonDays ? `?horizon_days=${horizonDays}` : "";
+    return request<ForecastResponse>(
+      `/analytics/assets/${encodeURIComponent(assetId)}/forecast${qs}`,
+    );
+  },
+
+  // -- Telemetry (connected sites) -------------------------------------
+  /** Recent raw telemetry samples for a connected asset (newest first). */
+  listTelemetrySamples(assetId: string, limit?: number): Promise<TelemetrySampleRead[]> {
+    const qs = limit ? `?limit=${limit}` : "";
+    return request<TelemetrySampleRead[]>(
+      `/telemetry/assets/${encodeURIComponent(assetId)}/samples${qs}`,
+    );
+  },
+  /** Admin: aggregate stored telemetry into scored daily readings. */
+  runTelemetryRollup(
+    params: { assetId?: string; includeToday?: boolean } = {},
+  ): Promise<RollupResponse> {
+    const q = new URLSearchParams();
+    if (params.assetId) q.set("asset_id", params.assetId);
+    if (params.includeToday) q.set("include_today", "true");
+    const qs = q.toString();
+    return request<RollupResponse>(`/telemetry/rollup${qs ? `?${qs}` : ""}`, {
+      method: "POST",
+    });
   },
 
   // -- Offline sync ----------------------------------------------------

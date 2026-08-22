@@ -4,6 +4,7 @@
 import type {
   AnalyticsSeverity,
   FaultCategory,
+  FaultSource,
   JobStatus,
   JobType,
 } from "./types";
@@ -103,3 +104,62 @@ export const FAULT_CATEGORY_LABEL: Record<FaultCategory, string> = {
   wiring: "Wiring",
   other: "Other",
 };
+
+/** How a fault was raised — shown as a small provenance chip. */
+export const FAULT_SOURCE_LABEL: Record<FaultSource, string> = {
+  technician: "Reported",
+  system: "Performance check",
+  telemetry: "Device telemetry",
+  forecast: "Forecast",
+};
+
+/** AC power, W → a compact "850 W" / "4.2 kW". */
+export function fmtPower(watts: number | null | undefined): string {
+  if (watts === null || watts === undefined) return "—";
+  if (watts < 1000) return `${Math.round(watts)} W`;
+  return `${fmtNumber(watts / 1000, watts < 10000 ? 2 : 1)} kW`;
+}
+
+export function fmtTemp(celsius: number | null | undefined): string {
+  if (celsius === null || celsius === undefined) return "—";
+  return `${Math.round(celsius)} °C`;
+}
+
+export function fmtVolts(v: number | null | undefined): string {
+  if (v === null || v === undefined) return "—";
+  return `${fmtNumber(v, 0)} V`;
+}
+
+/** Short local time (for a live-feed "last seen" stamp). */
+export function fmtTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+/** Friendly labels for the diagnostic channel keys stored on a fault's detail. */
+export const CHANNEL_LABEL: Record<string, string> = {
+  dc_string_voltages: "DC string voltages",
+  inverter_status: "Inverter status",
+  inverter_code: "Inverter code",
+  ac_power_w: "AC power",
+  module_temp_c: "Module temp",
+  grid_voltage_v: "Grid voltage",
+  dc_current_a: "DC current",
+};
+
+/** Render a channel snapshot value for display (arrays, power, temp, etc.). */
+export function fmtChannelValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return "—";
+  if (Array.isArray(value)) {
+    return value.map((v) => (typeof v === "number" ? fmtNumber(v, 0) : String(v))).join(" · ");
+  }
+  if (typeof value === "number") {
+    if (key === "ac_power_w") return fmtPower(value);
+    if (key === "module_temp_c") return fmtTemp(value);
+    if (key === "grid_voltage_v") return fmtVolts(value);
+    return fmtNumber(value, 1);
+  }
+  return String(value);
+}

@@ -8,14 +8,17 @@ import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Loading } from "@/components/ui/Spinner";
 import { FaultBadge } from "@/components/ui/SeverityBadge";
+import { Diagnosis } from "@/components/Diagnosis";
+import { TelemetryPanel } from "./TelemetryPanel";
 import {
   FAULT_CATEGORY_LABEL,
+  FAULT_SOURCE_LABEL,
   fmtCoords,
   fmtDate,
   fmtEnergy,
   fmtKwp,
 } from "@/lib/format";
-import type { AssetStatus } from "@/lib/types";
+import type { AssetStatus, FaultSource } from "@/lib/types";
 import type { ChipTone } from "@/components/ui/Chip";
 
 const STATUS_TONE: Record<AssetStatus, ChipTone> = {
@@ -28,6 +31,14 @@ const STATUS_LABEL: Record<AssetStatus, string> = {
   active: "Active",
   maintenance: "Maintenance",
   inactive: "Inactive",
+};
+
+/** Provenance chip tone — machine sources (telemetry/forecast) stand out. */
+const SOURCE_TONE: Record<FaultSource, ChipTone> = {
+  telemetry: "info",
+  forecast: "amber",
+  system: "neutral",
+  technician: "neutral",
 };
 
 export function AssetDetailPage() {
@@ -148,6 +159,8 @@ export function AssetDetailPage() {
           Capture meter reading
         </Link>
 
+        {asset.telemetry_enabled && <TelemetryPanel assetId={asset.id} />}
+
         {data && data.faults.length > 0 && (
           <div>
             <p className="sh-grouplabel">Open faults</p>
@@ -165,9 +178,13 @@ export function AssetDetailPage() {
                       {f.description}
                     </p>
                   )}
-                  <p className="sh-faint" style={{ fontSize: "var(--sh-fs-xs)", marginTop: 4 }}>
-                    Raised {fmtDate(f.created_at)}
-                  </p>
+                  <Diagnosis detail={f.detail} />
+                  <div className="sh-row sh-row--between" style={{ marginTop: 6 }}>
+                    <Chip tone={SOURCE_TONE[f.source]}>{FAULT_SOURCE_LABEL[f.source]}</Chip>
+                    <span className="sh-faint" style={{ fontSize: "var(--sh-fs-xs)" }}>
+                      Raised {fmtDate(f.created_at)}
+                    </span>
+                  </div>
                 </Card>
               ))}
             </div>
