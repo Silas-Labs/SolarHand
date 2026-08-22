@@ -3,7 +3,9 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "functions": {
-    "backend/app/main.py": {}
+    "backend/app/main.py": {
+      "maxDuration": 30
+    }
   },
   "rewrites": [
     { "source": "/auth/(.*)", "destination": "/backend/app/main.py" },
